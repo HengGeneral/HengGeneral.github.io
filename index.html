@@ -6,7 +6,7 @@ layout: default
     {% include categories.html%}
     {% include tags.html%}
 </div>
-<div class="col-md-9 col-content" style="height: 195px;">
+<div class="col-md-9 col-content">
     {% for post in paginator.posts %}
       {% include posts.html%}
     {% endfor %}
