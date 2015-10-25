@@ -1,6 +1,11 @@
 ---
 layout: default
 ---
+<div class="col-md-3 col-sidebar">
+    {% include author.html%}
+    {% include categories.html%}
+    {% include tags.html%}
+</div>
 <div class="col-md-9 col-content">
     {% for post in paginator.posts %}
       {% include posts.html%}
@@ -30,9 +35,4 @@ layout: default
             {% endif %}
         </ul>
     </nav>
-</div>
-<div class="col-md-3 col-sidebar">
-    {% include author.html%}
-    {% include categories.html%}
-    {% include tags.html%}
 </div>
