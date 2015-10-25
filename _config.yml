@@ -1,14 +1,13 @@
 permalink: /:year/:month/:day/:title/
 
 # 站点设置
-title: "Guovz"
-email: pzhuwjl@qq.com
-description: "王继林的个人博客"
-keywords: "Guovz"
+title: "Heng"
+email: lihengszh@aliyun.com
+description: "李恒的个人博客"
+keywords: ""
 
 # 用户信息设置
-weibo_username: Guovz
-github_username: guovz
+github_username: liheng
 
 # Markdown设置
 kramdown:
