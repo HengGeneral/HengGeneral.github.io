@@ -5,8 +5,6 @@ id: id_about_me
 permalink: /about/
 ---
 
-![我就是我](http://7xlgu7.com1.z0.glb.clouddn.com/me.jpg)
-
 教育经历
 ===
 中国科学院软件研究所(Institute of Software, Chinese Academy of Sciences)  2012~2015
