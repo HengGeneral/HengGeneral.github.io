@@ -4,6 +4,9 @@ title: Category
 permalink: /category/
 scripts: [category.js]
 ---
+<div class="col-md-3 col-sidebar">
+    {% include categories.html %}
+</div>
 <div class="col-md-9 col-content">
     <!-- 所有分类下文章 -->
     <section class="category hide" id="all">
@@ -21,7 +24,4 @@ scripts: [category.js]
     </section>
     {% endfor %}
 
-</div>
-<div class="col-md-3 col-sidebar">
-    {% include categories.html %}
 </div>

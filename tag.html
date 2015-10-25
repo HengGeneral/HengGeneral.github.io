@@ -3,6 +3,9 @@ layout: default
 title: Category
 permalink: /tag/
 ---
+<div class="col-md-3 col-sidebar">
+    {% include tags.html %}
+</div>
 <div class="col-md-9 col-content">
     <!-- 所有标签下文章 -->
     <!-- 每一个分类下文章 -->
@@ -22,7 +25,4 @@ permalink: /tag/
     </div>
     {% endfor %}
 
-</div>
-<div class="col-md-3 col-sidebar">
-    {% include tags.html %}
 </div>
