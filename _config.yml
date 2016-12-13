@@ -6,6 +6,10 @@ email: lihengszh@aliyun.com
 description: "李恒的个人博客"
 keywords: ""
 
+# 阅读处理
+encoding:     "utf-8"
+markdown_ext: "markdown,mkdown,mkdn,mkd,md"
+
 # 用户信息设置
 github_username: liheng
 
