@@ -1,2 +1,2 @@
-This is cloned from http://www.guovz.com
+李恒的博客~
 
