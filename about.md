@@ -7,8 +7,9 @@ permalink: /about/
 
 教育经历
 ===
--中国科学院软件研究所(Institute of Software, Chinese Academy of Sciences)  2012~2015
--武汉理工大学（Wuhan University of Technology） 2008～2012
+中国科学院软件研究所(Institute of Software, Chinese Academy of Sciences)  2012~2015
+
+武汉理工大学（Wuhan University of Technology） 2008～2012
 
 联系方式
 ===
