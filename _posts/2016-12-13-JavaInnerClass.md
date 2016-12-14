@@ -54,15 +54,19 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 和类的成员一样, 静态内部类属于它的外部类。同时和静态方法一样, 静态嵌套类不可直接使用外部类中的实例变量和实例方法: 该嵌套类仅能通过外部类的实例访问它们。
 
 ***
+
 **Note**: 静态内部类与外部类(包括其它类)的实例交互与其它top-level一样的。事实上, 静态内部类表现的行为像是该package下另一个的top-level类。
+
 ***
 
 可以通过外部封装的类名访问它的静态嵌套类:
+
 ```
     OuterClass.StaticNestedClass
 ```
 
 例如, 创建静态嵌套类的实例的方法如下:
+
 ```
     OuterClass.StaticNestedClass nestedObject = new OuterClass.StaticNestedClass();
 ```
@@ -72,6 +76,7 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 和实例的成员(变量和方法)一样, 内部类也属于它的外部类的实例。同时, 又具有该实例的变量和方法的访问权限。又因为该内部类属于外部类的某个实例, 所以它不可定义任何静态的成员。
 
 内部类的某个实例存在于外部类的实例中, 如下:
+
 ```
    class OuterClass {
         ...
@@ -117,6 +122,7 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 ```
 
 输出为:
+
 ```
     x = 23
     this.x = 1
@@ -124,10 +130,13 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 ```
 
 该例子展示了名称为x的三种变量: 外部类 ShadowTest 的成员变量, 内部类 FirstLevel 的成员变量 和 方法 methodInFirstLevel 的参数。methodInFirstLevel 的参数x 遮蔽了 内部类 FirstLevel 的成员变量。因而, 当你使用x的时候, 其实用的x是 methodInFirstLevel 的参数。为了使用内部类 FirstLevel 的成员变量, 需要使用关键词 **this**, 如下:
+
 ```
     System.out.println("this.x = " + this.x);
 ```
+
 为了使用外部类的成员变量, 需要用到外部类的名称。比如, 可以通过下面的语句在方法 methodInFirstLevel 中访问外部类ShadowTest的成员变量:
+
 ```
 System.out.println("ShadowTest.this.x = " + ShadowTest.this.x);
 ```
