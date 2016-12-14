@@ -90,7 +90,7 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 为了实例化某个内部类, 需要首先实例它的外部类。 然后, 使用如下的语法:
 
 ```
-    OuterClass.InnerClass innerObject = outerObject.new InnerClass();`
+    OuterClass.InnerClass innerObject = outerObject.new InnerClass();
 ```
 
 另外, 有两种比较特别的内部类: 局部内部类(local class) 和 匿名内部类(anonymous classes)。
@@ -148,3 +148,5 @@ System.out.println("ShadowTest.this.x = " + ShadowTest.this.x);
 内部类(包含局部内部类和匿名内部类)的序列化, 是强烈不鼓励的。当Java compiler编译某些结构,如内部类, 它会合成结构, 而这些结构在源码(classes, methods, fields, and other constructs) 中都不会有相应的构造。以至于Java compiler有一些JVM没有的新语言特性。然而, 这种合成的结构会随着不同的Java compiler而不同, 即.class文件的差异性。因此在不同的JRE环境中, 序列化和反序列化可能会有兼容性问题。内部类编译时合成的结构详情参见于[章节][ISPONMP]。
 
 [ISPONMP]: https://docs.oracle.com/javase/tutorial/reflect/member/methodparameterreflection.html#implcit_and_synthetic
+
+
