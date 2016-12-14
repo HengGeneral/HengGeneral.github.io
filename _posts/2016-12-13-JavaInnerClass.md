@@ -6,11 +6,11 @@ categories: [JAVA]
 author: liheng
 excerpt: "内部类"
 ---
-### 嵌套类
+## 嵌套类
 
 Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套类, 如下:
 
-```java
+```
     class OuterClass {
         ...
         class NestedClass {
@@ -20,10 +20,12 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 ```
 
 ***
+
 **专业术语**: 嵌套类分为两类, 静态的和非静态的。 通常, 静态的嵌套类被称作静态嵌套类, 非静态的嵌套类称作内部类。
+
 ***
 
-```java
+```
     class OuterClass {
         ...
         static class StaticNestedClass {
@@ -56,12 +58,12 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 ***
 
 可以通过外部封装的类名访问它的静态嵌套类:
-```java
+```
     OuterClass.StaticNestedClass
 ```
 
 例如, 创建静态嵌套类的实例的方法如下:
-```java
+```
     OuterClass.StaticNestedClass nestedObject = new OuterClass.StaticNestedClass();
 ```
 
@@ -70,7 +72,7 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 和实例的成员(变量和方法)一样, 内部类也属于它的外部类的实例。同时, 又具有该实例的变量和方法的访问权限。又因为该内部类属于外部类的某个实例, 所以它不可定义任何静态的成员。
 
 内部类的某个实例存在于外部类的实例中, 如下:
-```java
+```
    class OuterClass {
         ...
         class InnerClass {
@@ -81,16 +83,16 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 
 内部类的实例存在于且仅存在于它的外部类的实例, 同时又具有外部类的实例变量和实例方法的访问权限。
 为了实例化某个内部类, 需要首先实例它的外部类。 然后, 使用如下的语法:
-```java
+```
     OuterClass.InnerClass innerObject = outerObject.new InnerClass();`
 ```
 
 另外, 有两种比较特别的内部类: 局部内部类(local class) 和 匿名内部类(anonymous classes)。
 
-##遮蔽(Shadowing)
+### 遮蔽(Shadowing)
 如果内部类的成员变量或成员方法的某个名称 和 外部类的其它某个声明的名称一样, 那么外部类的那个名称将会被遮蔽, 则不可以仅通过该名称访问被遮蔽的声明。如下:
 
-```java
+```
     public class ShadowTest {
     
        public int x = 0;
@@ -115,18 +117,18 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 ```
 
 输出为:
-```java
+```
     x = 23
     this.x = 1
     ShadowTest.this.x = 0
 ```
 
 该例子展示了名称为x的三种变量: 外部类 ShadowTest 的成员变量, 内部类 FirstLevel 的成员变量 和 方法 methodInFirstLevel 的参数。methodInFirstLevel 的参数x 遮蔽了 内部类 FirstLevel 的成员变量。因而, 当你使用x的时候, 其实用的x是 methodInFirstLevel 的参数。为了使用内部类 FirstLevel 的成员变量, 需要使用关键词 **this**, 如下:
-```java
+```
     System.out.println("this.x = " + this.x);
 ```
 为了使用外部类的成员变量, 需要用到外部类的名称。比如, 可以通过下面的语句在方法 methodInFirstLevel 中访问外部类ShadowTest的成员变量:
-```java
+```
 System.out.println("ShadowTest.this.x = " + ShadowTest.this.x);
 ```
 
