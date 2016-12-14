@@ -88,6 +88,7 @@ Java 允许你在一个类内部定义另外一个类, 这样的类称作嵌套�
 
 内部类的实例存在于且仅存在于它的外部类的实例, 同时又具有外部类的实例变量和实例方法的访问权限。
 为了实例化某个内部类, 需要首先实例它的外部类。 然后, 使用如下的语法:
+
 ```
     OuterClass.InnerClass innerObject = outerObject.new InnerClass();`
 ```
