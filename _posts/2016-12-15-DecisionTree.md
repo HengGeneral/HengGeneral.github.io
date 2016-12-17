@@ -44,9 +44,9 @@ excerpt: "Machine Learning"
 为了更准确地定义信息增益(information gain), 信息论中的熵被用来表示训练集中数据的多样性程度。
 给定集合S, 该集合包含两种分类结果, yes 和 no, 那么S的熵则是:
 
-$$ Entroy(S) = - p_{y} log_{2}^{p_{y}} - p_{n} log_{2}^{p_{n}} $$
+$$ Entroy(S) = - p_{y} log_{2} p_{y} - p_{n} log_{2} p_{n} $$
 
-其中, $$p_y$$ 表示 S中yes的占比, $$p_n$$ 表示 S 中no的占比。
+其中, $$p_{y}$$ 表示 S中yes的占比, $$p_{n}$$ 表示 S 中no的占比。
 
 
 
