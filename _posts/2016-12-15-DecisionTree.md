@@ -5,7 +5,6 @@ tags:  [机器学习]
 categories: [机器学习]
 author: liheng
 excerpt: "Machine Learning"
-figure: /images/ID3.png
 ---
 ## 决策树
 
@@ -73,10 +72,8 @@ $$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S
 的任意成员进行编码时可以节省的bit数目。
 
 在构造决策树的过程中, ID3算法使用信息增益精确地度量, 以在每一步选择当前情况下最优的属性。ID3 算法描述如下:
+![ID3算法](https://goo.gl/images/AQ4eU2)
 
-![ID3算法][ID3ALGO]
-
-[ID3ALGO]: https://goo.gl/images/AQ4eU2 "ID3算法"
 [ZHIHULIANWENXI]: https://www.zhihu.com/question/22178202
 
 
