@@ -76,7 +76,7 @@ $$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S
 
 ![ID3算法][ID3ALGO]
 
-[ID3ALGO]: /assets/images/ID3.jpg "ID3算法"
+[ID3ALGO]: https://goo.gl/images/AQ4eU2 "ID3算法"
 [ZHIHULIANWENXI]: https://www.zhihu.com/question/22178202
 
 
