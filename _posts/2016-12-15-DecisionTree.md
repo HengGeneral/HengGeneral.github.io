@@ -10,14 +10,23 @@ excerpt: "Machine Learning"
 
 ### 介绍
 
-决策树学习是一种近似估计离散函数的方法, 经过学习的离散函数就代表了一棵决策树。
-另外, 该决策树表示为 if-then 语句的集合时, 也能更易于人们理解。
-目前,这些学习方法在归纳推理算法中极其流行, 同时也广泛地应用于疾病监测和信贷风险评估等领域。
+决策树学习是一种近似估计离散函数(discrete-valued function)的方法, 经过学习的函数就代表了一棵决策树。
+另外, 该决策树表示为 if-then 语句的集合时, 也能更易于人们理解, 下图是一个根据Outlook, Temperature等
+属性是否打高尔夫球的决策树:
+![ID3算法](/images/ml/decisionTree/IFELSE.png)
+
+目前,这些学习方法在归纳推理算法中极其流行, 同时也广泛地应用于[疾病检测][DESEASEDIGNOSE]和[信贷风险评估][RISKLOAN]等领域。
 
 ### 决策树的表示方法
 
 决策树将每个实体(instance)沿着树根到叶子节点进行判断, 这样就可以得到该实体的分类。
+例如, 一个例子如下:
+
+<Outlook = Sunny, Temperature = Hot, Humidity = High, Wind = Strong>
+
+
 决策树种的每个结点表示了实体某种属性的判断, 结点的每个分支则对应了该属性的一个可能的取值。
+我们根据上述决策树(最左分支)就能预测该实体不会打高尔夫球了。 
 
 ### 适合决策树学习的问题
 
@@ -72,10 +81,15 @@ $$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S
 的任意成员进行编码时可以节省的bit数目。
 
 在构造决策树的过程中, ID3算法使用信息增益精确地度量, 以在每一步选择当前情况下最优的属性。ID3 算法描述如下:
-![ID3算法](/images/ml/decisionTree/ID3.png)
+![ID3算法](/images/ml/decisionTree/ID3.png "")
+
+#### 算法实现
+
+1. 使用决策树来分析
 
 [ZHIHULIANWENXI]: https://www.zhihu.com/question/22178202
-
+[DESEASEDIGNOSE]: https://sites.google.com/a/lclark.edu/drake/courses/ai/decision-trees-heart-disease
+[RISKLOAN]: http://courses.media.mit.edu/2008fall/mas622j/Projects/CharlieCocoErnestoMatt/decision_trees/
 参考文献:
 
 1. https://www.cs.princeton.edu/courses/archive/spring07/cos424/papers/mitchell-dectrees.pdf
