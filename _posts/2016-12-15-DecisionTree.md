@@ -73,10 +73,9 @@ $$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S
 
 在构造决策树的过程中, ID3算法使用信息增益精确地度量, 以在每一步选择当前情况下最优的属性。ID3 算法描述如下:
 
-![ID3算法][ID3ALGO]
+<img src="{{site.baseurl}}/assets/ID3.jpg" alt="ID3算法"/>
 
 
-[ID3ALGO]: https://github.com/HengGeneral/HengGeneral.github.io/blob/master/assets/ID3.png "ID3算法"
 [ZHIHULIANWENXI]: https://www.zhihu.com/question/22178202
 
 
