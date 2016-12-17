@@ -68,8 +68,15 @@ $$ Entroy(S) = \sum_{i=0}^{c} - p_{i} \log_{2} p_{i}$$
 $$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S_{v}) $$
 
 其中, Values(A) 表示A属性所有取值构成的集合, $$S_{v}$$ 表示S的集合中属性A取值v 所构成的子集
-(i.e., $$S_{v}$$ = { s $$\in$$ S|A(s) = v})。
+(i.e., $$S_{v}$$ = { s $$\in$$ S|A(s) = v})。信息增益Gain(S, A) 就表示当知道属性A的值, 对S中
+的任意成员进行编码时可以节省的bit数目。
 
+在构造决策树的过程中, ID3算法使用信息增益精确地度量, 以在每一步选择当前情况下最优的属性。ID3 算法描述如下:
+
+![ID3算法][ID3ALGO]
+
+
+[ID3ALGO]: /assets/ml/ID3.jpg "ID3算法"
 [ZHIHULIANWENXI]: https://www.zhihu.com/question/22178202
 
 
