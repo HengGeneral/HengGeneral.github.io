@@ -65,9 +65,9 @@ $$ Entroy(S) = \sum_{i=0}^{c} - p_{i} \log_{2} p_{i}$$
 
 给定集合S 和 某个属性A, 信息增益Gain(S, A)则被定义为:
 
-$$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \sub{|S_{v}|}{|S|}Entropy(S_{v}) $$
+$$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S_{v}) $$
 
-其中, Values(A) 表示A属性所有取值构成的集合, $$S_{v}$$ 表示S的集合中属性A取值v 所构成的子集(i.e., $$S_{v} = \{ s \in S|A(s) = v\}$$)。
+其中, Values(A) 表示A属性所有取值构成的集合, $$S_{v}$$ 表示S的集合中属性A取值v 所构成的子集(i.e., $$S_{v} = { s \in S|A(s) = v}$$)。
 
 [ZHIHULIANWENXI]: https://www.zhihu.com/question/22178202
 
