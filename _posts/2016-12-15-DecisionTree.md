@@ -83,7 +83,7 @@ $$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S
 
 ## 算法实现
 
-1. 使用决策树来分析眼镜问题, ![代码][LENCODE]
+1. 使用决策树来分析眼镜问题, [代码][LENCODE]
 
 [ZHIHULIANWENXI]: https://www.zhihu.com/question/22178202
 [DESEASEDIGNOSE]: https://sites.google.com/a/lclark.edu/drake/courses/ai/decision-trees-heart-disease
