@@ -79,15 +79,16 @@ $$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S
 的任意成员进行编码时可以节省的bit数目。
 
 在构造决策树的过程中, ID3算法使用信息增益精确地度量, 以在每一步选择当前情况下最优的属性。ID3 算法描述如下:
-![ID3算法](/images/ml/decisionTree/ID3.png "")
+![ID3算法](/images/ml/decisionTree/ID3.png)
 
 ## 算法实现
 
-1. 使用决策树来分析疾病问题
+1. 使用决策树来分析眼镜问题, ![代码][LENCODE]
 
 [ZHIHULIANWENXI]: https://www.zhihu.com/question/22178202
 [DESEASEDIGNOSE]: https://sites.google.com/a/lclark.edu/drake/courses/ai/decision-trees-heart-disease
 [RISKLOAN]: http://courses.media.mit.edu/2008fall/mas622j/Projects/CharlieCocoErnestoMatt/decision_trees/
+[LENCODE]: https://github.com/HengGeneral/machineLearning
 
 ##参考文献:
 
