@@ -90,7 +90,7 @@ $$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S
 [RISKLOAN]: http://courses.media.mit.edu/2008fall/mas622j/Projects/CharlieCocoErnestoMatt/decision_trees/
 [LENCODE]: https://github.com/HengGeneral/machineLearning
 
-##参考文献:
+## 参考文献:
 
 1. https://www.cs.princeton.edu/courses/archive/spring07/cos424/papers/mitchell-dectrees.pdf
 2. http://leijun00.github.io/2014/09/decision-tree/
