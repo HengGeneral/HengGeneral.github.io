@@ -94,6 +94,21 @@ excerpt: "常用的linux命令记录"
     uniq -d ./test.txt
 ```
 
+### 压缩类
+
+#### zip/unzip
+
+功能介绍: 压缩/列出/解压zip压缩文件
+
+使用场景: 
+
+1. 解压缩zip文件
+
+```
+  unzip ./test.zip
+```
+
+
 ### 系统配置类
 
 #### uname
@@ -109,7 +124,7 @@ excerpt: "常用的linux命令记录"
     uname -a
 ```
 
-#### sz/rz
+#### sz/rz/scp
 
 功能介绍: unix 和 windows 文件传输的命令行工具
 
@@ -119,4 +134,10 @@ excerpt: "常用的linux命令记录"
 
 ```
     sz test.txt
+```
+
+2. 把本地文件上传到服务器
+
+```
+    scp file user@host:file
 ```
