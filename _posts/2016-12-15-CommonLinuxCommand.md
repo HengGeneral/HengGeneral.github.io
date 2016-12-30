@@ -155,3 +155,17 @@ excerpt: "常用的linux命令记录"
     ```
         scp file user@host:file
     ```
+    
+### 网络类
+    
+#### curl
+
+功能介绍: 用于c/s之间传输数据
+
+使用场景:
+
+1.  测试服务启动情况, 比如判断es集群启动情况
+
+    ```
+        curl https://XX.XX.XX.XX:9200/?pretty
+    ```
