@@ -20,7 +20,7 @@ excerpt: "网络封包工具"
 
 ![TCP-2](/images/network/tcp/wireshark-tcp-2.png)
 
-1.  第三次握手, 数据包
+3.  第三次握手, 数据包
 
 ![TCP-3](/images/network/tcp/wireshark-tcp-3.png)
 
