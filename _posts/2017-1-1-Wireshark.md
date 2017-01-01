@@ -73,8 +73,8 @@ ip.dst==220.181.112.244 or ip.src ==220.181.112.244
 
 ## 参考文献:
 
-1.http://www.freesoft.org/CIE/Course/Section4/8.htm
-2.https://nmap.org/book/tcpip-ref.html
-3.http://coolshell.cn/articles/11564.html
-4.https://en.wikipedia.org/wiki/Transmission_Control_Protocol
-5.https://www.wireshark.org/docs/wsug_html_chunked/ChUsePacketBytesPaneSection.html
+1. http://www.freesoft.org/CIE/Course/Section4/8.htm
+2. https://nmap.org/book/tcpip-ref.html
+3. http://coolshell.cn/articles/11564.html
+4. https://en.wikipedia.org/wiki/Transmission_Control_Protocol
+5. https://www.wireshark.org/docs/wsug_html_chunked/ChUsePacketBytesPaneSection.html
