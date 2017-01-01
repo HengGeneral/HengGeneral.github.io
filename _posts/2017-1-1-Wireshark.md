@@ -14,13 +14,13 @@ excerpt: "网络封包工具"
 
 1.  第一次握手, 数据包
 
-![TCP-1](/images/network/tcp/wireshark-tcp-1.png)
+    ![TCP-1](/images/network/tcp/wireshark-tcp-1.png)
 
 2.  第二次握手, 数据包
 
-![TCP-2](/images/network/tcp/wireshark-tcp-2.png)
+    ![TCP-2](/images/network/tcp/wireshark-tcp-2.png)
 
 3.  第三次握手, 数据包
 
-![TCP-3](/images/network/tcp/wireshark-tcp-3.png)
+    ![TCP-3](/images/network/tcp/wireshark-tcp-3.png)
 
