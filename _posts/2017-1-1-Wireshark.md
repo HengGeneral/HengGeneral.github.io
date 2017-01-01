@@ -11,7 +11,7 @@ excerpt: "网络封包工具"
 
 TCP头格式(header format)
 
-    ![TCP-4](/images/network/tcp/tcp-header-format.png)
+![TCP-4](/images/network/tcp/tcp-header-format.png)
 
 其中,
 
@@ -48,7 +48,7 @@ Checksum: 用于header和data的数据校验,以检查数据传输过程中是�
 
 打开terminal, ping一下获取相应的主机host(这里是220.181.112.244), 如下:
 
-    ![TCP-0](/images/network/tcp/tcp-ping-baidu.png)
+ ![TCP-0](/images/network/tcp/tcp-ping-baidu.png)
 
 在wireshark过滤工作栏中添加过滤器, 只显示与220.181.112.244的数据交互信息, 如下:
 
@@ -59,17 +59,17 @@ ip.dst==220.181.112.244 or ip.src ==220.181.112.244
 
 1.第一次握手, 数据包
 
-    ![TCP-1](/images/network/tcp/wireshark-tcp-1.png)
+ ![TCP-1](/images/network/tcp/wireshark-tcp-1.png)
 
 
 2.第二次握手, 数据包
 
-    ![TCP-2](/images/network/tcp/wireshark-tcp-2.png)
+ ![TCP-2](/images/network/tcp/wireshark-tcp-2.png)
 
 
 3.第三次握手, 数据包
 
-    ![TCP-3](/images/network/tcp/wireshark-tcp-3.png)
+ ![TCP-3](/images/network/tcp/wireshark-tcp-3.png)
 
 ## 参考文献:
 
