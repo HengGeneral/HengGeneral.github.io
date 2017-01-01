@@ -11,7 +11,7 @@ excerpt: "网络封包工具"
 
 TCP头格式(header format)
 
-    ![TCP-HEADER-FORMAT](/images/network/tcp/tcp-header-format.png)
+    ![TCP-4](/images/network/tcp/tcp-header-format.png)
 
 其中,
 
