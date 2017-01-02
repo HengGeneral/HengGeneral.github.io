@@ -28,6 +28,7 @@ $$P(B\mid A)$$ - 条件概率, 在事件A发生的条件下, B事件发生的概
 
 现在用 p1(x, y) 表示数据结点(x, y)属于类别1的概率, p2(x, y) 表示数据结点(x, y)属于类别2的概率。
 那么对于一个新数据结点(x, y), 可以用下面的规则来判断它的类别:
+
 1.  如果p1(x, y) > p2(x, y), 那么属于类别1;
 2.  如果p1(x, y) < p2(x, y), 那么属于类别2.
 
@@ -42,7 +43,7 @@ $$p(C_{k}\vert x_{1}, \dots, x_{n})$$
 
 根据Bayes' theorem, 上述条件概率可以写成:
  
-$$p(C_{k}\vert \mathbf {x}) = \frac {p(C_{k}) p(\mathbf {x} \vert C_{k})}{p(\mathbf {x})}}$$
+$$p(C_{k}\vert \mathbf {x}) = {\frac {p(C_{k}) p(\mathbf {x} \vert C_{k})}{p(\mathbf {x})}}}$$
 
 
 
