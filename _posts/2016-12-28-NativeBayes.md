@@ -43,7 +43,7 @@ $$p(C_{k}\vert x_{1}, \dots, x_{n})$$
 
 根据Bayes' theorem, 上述条件概率可以写成:
  
-$$p(C_{k}\mid \mathbf {x}) = {\frac{p(C_{k}) p(\mathbf {x} \mid C_{k})}{p(\mathbf {x})}}}$$
+$$p(C_{k}\mid \mathbf {x}) = {\frac{p(C_{k}) p(\mathbf {x} \mid C_{k})} {p(\mathbf {x})}}$$
 
 
 
