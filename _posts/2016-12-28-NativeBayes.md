@@ -60,16 +60,24 @@ $$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2}\mid
 
 ### 朴素贝叶斯模型
 
-朴素(naive) 假定 各个属性之间相互独立, 则有
+朴素贝叶斯模型中, 朴素(naive) 则表示 各个属性之间相互独立。因此则有
 
 $$p(C_{k},x_{1},\dots ,x_{n}) = p(x_{1}\mid C_{k})\ p(x_{2}\mid C_{k})\dots\ p(x_{3}\mid C_{k})p(C_{k})$$
 
 因此, 计算 $$p(C_{k}\mid x_{1},\dots ,x_{n})$$的值 可以看成计算 $$p(C_{k})\prod_{i=1}^{n} p(x_{i}\mid C_{k})$$的值。
 
+### 应用
+
+朴素贝叶斯分类器在社区垃圾评论中的[应用][ML-Bayes].
+
+
+[ML-Bayes]: https://github.com/HengGeneral/machineLearning/tree/master/naiveBayes
 [ChainRules]: https://en.wikipedia.org/wiki/Chain_rule_(probability)
 
-## 参考文献:
+### 参考文献:
 1. https://en.wikipedia.org/wiki/Bayes'_theorem
 2. 《机器学习实战》
+3. https://en.wikipedia.org/wiki/Chain_rule_(probability)
+4. https://en.wikipedia.org/wiki/Naive_Bayes_classifier
 
 
