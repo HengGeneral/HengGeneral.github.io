@@ -46,14 +46,14 @@ $$p(C_{k}\vert x_{1}, \dots, x_{n})$$
 $$p(C_{k}\mid \mathbf {x}) = {\frac{p(C_{k}) p(\mathbf {x} \mid C_{k})} {p(\mathbf {x})}}$$
 
 实际上, 没有必要对n个属性的所有取值进行组合枚举, 同时它的取值分布和n个属性有关系, 与分类没有关系。
-在各个属性给定的情况下, $$p(\mathbf {x})}$$ 为常数。而分子则是$$\mathbf{x}$$ 和 $$C_{k}$$的联合概率, 表示为:
+在各个属性给定的情况下, $$p(\mathbf {x})$$ 为常数。而分子则是$$\mathbf{x}$$ 和 $$C_{k}$$的联合概率, 表示为:
 
 $$p(C_{k},x_{1},\dots ,x_{n})$$
 
 根据[Chain rules][ChainRules], 可以写为:
 
-$$p(C_{k},x_{1},\dots ,x_{n})$$
-$$ = p(x_{1},\dots ,x_{n},C_{k})$$
+$$p(C_{k},x_{1},\dots ,x_{n})$$\\
+$$ = p(x_{1},\dots ,x_{n},C_{k})$$\\
 $$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2},\dots ,x_{n},C_{k})$$
 $$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2}\mid x_{3},\dots ,x_{n},C_{k})p(x_{3},\dots ,x_{n},C_{k})$$
 $$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2}\mid x_{3},\dots ,x_{n},C_{k})\dots p(x_{n-1}\mid x_{n},C_{k})p(x_{n}\mid C_{k})p(C_{k})$$
