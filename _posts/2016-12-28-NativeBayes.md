@@ -52,12 +52,10 @@ $$p(C_{k},x_{1},\dots ,x_{n})$$
 
 根据[Chain rules][ChainRules], 可以写为:
 
-$$p(C_{k},x_{1},\dots ,x_{n})$$
-
-$$ = p(x_{1},\dots ,x_{n},C_{k})$$
-
-$$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2},\dots ,x_{n},C_{k})$$
-$$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2}\mid x_{3},\dots ,x_{n},C_{k})p(x_{3},\dots ,x_{n},C_{k})$$
+$$p(C_{k},x_{1},\dots ,x_{n})$$\\
+$$ = p(x_{1},\dots ,x_{n},C_{k})$$\\
+$$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2},\dots ,x_{n},C_{k})$$\\
+$$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2}\mid x_{3},\dots ,x_{n},C_{k})p(x_{3},\dots ,x_{n},C_{k})$$\\
 $$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2}\mid x_{3},\dots ,x_{n},C_{k})\dots p(x_{n-1}\mid x_{n},C_{k})p(x_{n}\mid C_{k})p(C_{k})$$
 
 ### 朴素贝叶斯模型
