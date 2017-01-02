@@ -52,16 +52,19 @@ $$p(C_{k},x_{1},\dots ,x_{n})$$
 
 根据[Chain rules][ChainRules], 可以写为:
 
-$$p(C_{k},x_{1},\dots ,x_{n}) = p(x_{1},\dots ,x_{n},C_{k})$$
+$$p(C_{k},x_{1},\dots ,x_{n})$$
+$$ = p(x_{1},\dots ,x_{n},C_{k})$$
 $$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2},\dots ,x_{n},C_{k})$$
 $$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2}\mid x_{3},\dots ,x_{n},C_{k})p(x_{3},\dots ,x_{n},C_{k})$$
 $$                            = p(x_{1}\mid x_{2},\dots ,x_{n},C_{k})p(x_{2}\mid x_{3},\dots ,x_{n},C_{k})\dots p(x_{n-1}\mid x_{n},C_{k})p(x_{n}\mid C_{k})p(C_{k})$$
 
-另外, 朴素(naive) 假定 各个属性之间相互独立, 则有
+### 朴素贝叶斯模型
+
+朴素(naive) 假定 各个属性之间相互独立, 则有
 
 $$p(C_{k},x_{1},\dots ,x_{n}) = p(x_{1}\mid C_{k})\ p(x_{2}\mid C_{k})\dots\ p(x_{3}\mid C_{k})p(C_{k})$$
 
-因此, 计算 $$p(C_{k}\mid x_{1},\dots ,x_{n})$$的值 可以看成计算 $$p(C_{k})\prod_{{i=1}}^{n}p(x_{i}\mid C_{k})$$的值。
+因此, 计算 $$p(C_{k}\mid x_{1},\dots ,x_{n})$$的值 可以看成计算 $$p(C_{k})\prod_{i=1}^{n} p(x_{i}\mid C_{k})$$的值。
 
 [ChainRules]: https://en.wikipedia.org/wiki/Chain_rule_(probability)
 
