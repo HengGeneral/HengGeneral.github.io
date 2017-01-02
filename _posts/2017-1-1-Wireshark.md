@@ -48,7 +48,7 @@ tcp建立连接的过程(a.k.a, 三次握手)如下图所示:
 
  ![TCP-THREE-WAY-SHAKING](/images/network/tcp/TCP-Three-Way-Handshaking.png)
 
-为什么是3次挥手而不是2次挥手, 参见[问题][ThreeWayNotTwoWay]
+为什么是3次握手而不是2次握手, 参见[问题][ThreeWayNotTwoWay]
 
 ### wireshark 学习TCP连接
 
