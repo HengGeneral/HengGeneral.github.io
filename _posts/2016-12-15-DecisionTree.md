@@ -88,7 +88,7 @@ $$ Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_{v}|}{|S|}Entropy(S
 [ZHIHULIANWENXI]: https://www.zhihu.com/question/22178202
 [DESEASEDIGNOSE]: https://sites.google.com/a/lclark.edu/drake/courses/ai/decision-trees-heart-disease
 [RISKLOAN]: http://courses.media.mit.edu/2008fall/mas622j/Projects/CharlieCocoErnestoMatt/decision_trees/
-[LENCODE]: https://github.com/HengGeneral/machineLearning
+[LENCODE]: https://github.com/HengGeneral/machineLearning/tree/master/decisionTree
 
 ## 参考文献:
 
