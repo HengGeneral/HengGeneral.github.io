@@ -21,7 +21,7 @@ Destination Port: 指定接收端口号
 
 Sequence Number, 有两个作用:
 
-1. 若SYN标志位置为1, 表示这是最初的包的序号(从下图建立连接过程中可以看出, SYN=1 Seq=0); 同时,在该包来自服务端的确认信息中ack序号为seq+1
+1. 若SYN标志位置为1, 表示这是最初的包的序号(从下图建立连接过程中可以看出, SYN=1 Seq=0); 同时,在该包来自另一端的确认信息中ack序号为seq+1
 (从下图中建立连接过程中可以看出, SYN=1 ACK=1 Seq=0 Ack=1); 注: ACK: 全部大小表示标志; Ack: 首字母大写或者都不大写表示确认序号;
 
 2. 如果SYN标志位置为0, 表示tcp包中data区第一个字节的序列标识;
@@ -34,13 +34,21 @@ Data Offset: 指定TCP头的字节数。头(header)最小是20 bytes, 最多是6
 
 Flags: 包含9个位标识, 用到的如下:
 
-1. ACK – 表示Acknowledgment Number很重要。除了发送端发送的SYN包以外, 其他的包都将该标志位设置1;
-2. SYN (1 bit) – 同步序列号。只有sender/receiver发送的第一个包中改标志位才设为1。 
-3. FIN (1 bit) – 表示发送者不会再有数据过来了
+1. ACK – 表示Acknowledgment Number很重要。除了最开始发送端发送的SYN包以外, 其他的包都将该标志位设置1;
+2. SYN – 同步序列号。只有sender/receiver发送的第一个包中改标志位才设为1。 
+3. FIN – 表示发送者不会再有数据过来了
 
 Window Size: 用于滑动窗口中, 表示接收端希望接收到(尚未获得确认消息)的字节数
 
 Checksum: 用于header和data的数据校验,以检查数据传输过程中是否有错误。
+
+### TCP 建立连接
+
+tcp建立连接的过程(a.k.a, 三次握手)如下图所示:
+
+ ![TCP-THREE-WAY-SHAKING](/images/network/tcp/TCP-Three-Way-Handshaking.png)
+
+为什么是3次挥手而不是2次挥手, 参见[问题][ThreeWayNotTwoWay]
 
 ### wireshark 学习TCP连接
 
@@ -70,6 +78,9 @@ ip.dst==220.181.112.244 or ip.src ==220.181.112.244
 3.第三次握手, 数据包
 
  ![TCP-3](/images/network/tcp/wireshark-tcp-3.png)
+
+
+[ThreeWayNotTwoWay]:http://networkengineering.stackexchange.com/questions/24068/why-do-we-need-a-3-way-handshake-why-not-just-2-way
 
 ## 参考文献:
 
