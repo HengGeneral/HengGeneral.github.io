@@ -17,7 +17,7 @@ DOM(abbr. DOM)是一个标准的树结构, 其中的每个结点包含一个XML�
 xml文件加载代码如下:
 
 ```
-XmlBeanFactory xmlBeanFactory = new XmlBeanFactory(new ClassPathResource("service-context.xml"));
+XmlBeanFactory xmlBeanFactory=new XmlBeanFactory(new ClassPathResource("service-context.xml"));
 ```
 
 #### ClassPathResource
@@ -176,8 +176,10 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
 本文暂且关注XML解析成DOM的情况, 调用doLoadDocument(InputSource, Resource)则进入:
 
 ```
-    protected Document doLoadDocument(InputSource inputSource, Resource resource) throws Exception {
-        return this.documentLoader.loadDocument(inputSource, this.getEntityResolver(), this.errorHandler, this.getValidationModeForResource(resource), this.isNamespaceAware());
+    protected Document doLoadDocument(InputSource inputSource, Resource resource)
+      throws Exception {
+        return this.documentLoader.loadDocument(inputSource, this.getEntityResolver(),
+                this.errorHandler, this.getValidationModeForResource(resource), this.isNamespaceAware());
     }
 ```
 
@@ -188,8 +190,10 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
 然后使用DocumentBuilder来将xml解析为Document。
 
 ```
-    public Document loadDocument(InputSource inputSource, EntityResolver entityResolver, ErrorHandler errorHandler, int validationMode, boolean namespaceAware) throws Exception {
-        DocumentBuilderFactory factory = this.createDocumentBuilderFactory(validationMode, namespaceAware);
+    public Document loadDocument(InputSource inputSource, EntityResolver entityResolver,
+     ErrorHandler errorHandler, int validationMode, boolean namespaceAware) throws Exception {
+        DocumentBuilderFactory factory 
+                    = this.createDocumentBuilderFactory(validationMode, namespaceAware);
         if(logger.isDebugEnabled()) {
             logger.debug("Using JAXP provider [" + factory.getClass().getName() + "]");
         }
