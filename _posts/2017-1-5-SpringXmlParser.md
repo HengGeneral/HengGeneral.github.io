@@ -6,13 +6,13 @@ categories: [JAVA]
 author: liheng
 excerpt: "XML解析"
 ---
-## 文档对象模型(Document Object Model, a.k.a, DOM)
+## 文档对象模型(Document Object Model)
 
-DOM是一个标准的树结构, 其中的每个结点包含一个XML文档中的一个组件。
+DOM(abbr. DOM)是一个标准的树结构, 其中的每个结点包含一个XML文档中的一个组件。
 其中, 最广泛使用的[结点类型][DomNodeType]为 元素结点 和 文本结点。 
 使用DOM相关的函数可以创建、删除、遍历结点 和改变结点的内容等。
 
-## XML解析为DOM
+### XML解析为DOM
 
 xml文件加载代码如下:
 
@@ -20,7 +20,7 @@ xml文件加载代码如下:
 XmlBeanFactory xmlBeanFactory = new XmlBeanFactory(new ClassPathResource("service-context.xml"));
 ```
 
-### ClassPathResource
+#### ClassPathResource
 
 Spring 配置文件的读取是通过ClassPathResource封装的。
 利用ClassPathResource读取xml配置就是通过构造函数传入的文件路径，接着交给clazz或者classLoader，调用getResourceAsStream获取到InputStream。
@@ -55,7 +55,7 @@ classLoader则是解析resource名称加载资源文件的。
 否则为相对名称(该类文件名称需要经过适当地修改,之后调用ClassLoader下的方法)。
 resource名称的解析具体涉及到两种方法:
 
-1. 使用java.lang.Class中的方法 - 
+1.使用java.lang.Class中的方法 - 
 使用getResource()和getResourceAsStream()来根据resource名称来定位资源。
 若没有根据指定的名称定位到资源, 则返回null。当完成resource名称的转换后(规则:
 若resource名称以"/"开头, 则什么都不做; 否则在resource名称前添加该类所在包的名称,然后将所有的"."转换为"/"),
@@ -73,7 +73,7 @@ Class类中的方法作为ClassLoader类中方法的代理, 将会得到执行�
     }
 ```
 
-2. 使用java.lang.ClassLoader中的方法 - 
+2.使用java.lang.ClassLoader中的方法 - 
 ClassLoader中的方法直接使用resource名称来定位资源, 同时不会对resource名称进行绝对/相对转换(absolute/relative transformation)。
 而且, resource名称不能以"/"开头。
 
@@ -96,16 +96,19 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
         ClassLoader cl = null;
 
         try {
-            cl = Thread.currentThread().getContextClassLoader(); //①当前线程的classLoader
+            //①当前线程的classLoader
+            cl = Thread.currentThread().getContextClassLoader();
         } catch (Throwable var3) {
             ;
         }
 
         if(cl == null) {
-            cl = ClassUtils.class.getClassLoader(); //② 加载此类的classLoader
+            //② 加载此类的classLoader
+            cl = ClassUtils.class.getClassLoader();
             if(cl == null) {
                 try {
-                    cl = ClassLoader.getSystemClassLoader(); //③系统使用的classLoader, Application ClassLoader
+                    //③系统使用的classLoader, Application ClassLoader
+                    cl = ClassLoader.getSystemClassLoader();
                 } catch (Throwable var2) {
                     ;
                 }
@@ -118,7 +121,7 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
 
 此处获取classLoader的地方有①②③三处, 它们的区别参考[JavaWorld][JavaWorld].
 
-### XmlBeanDefinitionReader
+#### XmlBeanDefinitionReader
 
 当xml文件完成ClassPathResource的封装后, 读取操作就交给XmlBeanDefinitionReader了, 代码如下(位于XmlBeanFactory.class中):
 
@@ -136,7 +139,11 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
 
 ```
     public Reader getReader() throws IOException {
-        return this.charset != null?new InputStreamReader(this.resource.getInputStream(), this.charset):(this.encoding != null?new InputStreamReader(this.resource.getInputStream(), this.encoding):new InputStreamReader(this.resource.getInputStream()));
+        return this.charset != null?
+        new InputStreamReader(this.resource.getInputStream(), this.charset):
+        (this.encoding != null?
+            new InputStreamReader(this.resource.getInputStream(), this.encoding)
+                :new InputStreamReader(this.resource.getInputStream()));
     }
 ```
 
