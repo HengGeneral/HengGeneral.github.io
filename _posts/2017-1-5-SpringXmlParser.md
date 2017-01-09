@@ -147,10 +147,75 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
     }
 ```
 
+之后进入loadBeanDefinitions(EncodedResource)方法, 
+然后将EncodedResource封装到[InputSource类][InputSource], 以便之后使用SAX方式来解析XML文件。
+另外该方法的核心代码如下:
+
+```
+    InputStream ex = encodedResource.getResource().getInputStream();
+
+    try {
+        InputSource inputSource = new InputSource(ex);
+        if(encodedResource.getEncoding() != null) {
+            inputSource.setEncoding(encodedResource.getEncoding());
+        }
+
+            var5 = this.doLoadBeanDefinitions(inputSource, encodedResource.getResource());
+        } finally {
+            ex.close();
+        }
+```
+
+之后, 进入doLoadBeanDefinitions(InputSource, Resource)方法, 将xml解析成DOM文件以及注册相应的Bean, 其核心代码片段如下:
+
+```
+    Document ex = this.doLoadDocument(InputSource, Resource);
+    return this.registerBeanDefinitions(ex, resource);
+```
+
+本文暂且关注XML解析成DOM的情况, 调用doLoadDocument(InputSource, Resource)则进入:
+
+```
+    protected Document doLoadDocument(InputSource inputSource, Resource resource) throws Exception {
+        return this.documentLoader.loadDocument(inputSource, this.getEntityResolver(), this.errorHandler, this.getValidationModeForResource(resource), this.isNamespaceAware());
+    }
+```
+
+
+#### DefaultDocumentLoader
+
+接下来进入DefaultDocumentLoader的loadDocument(InputSource, EntityResolver, ErrorHandler, int, boolean)方法,
+然后使用DocumentBuilder来将xml解析为Document。
+
+```
+    public Document loadDocument(InputSource inputSource, EntityResolver entityResolver, ErrorHandler errorHandler, int validationMode, boolean namespaceAware) throws Exception {
+        DocumentBuilderFactory factory = this.createDocumentBuilderFactory(validationMode, namespaceAware);
+        if(logger.isDebugEnabled()) {
+            logger.debug("Using JAXP provider [" + factory.getClass().getName() + "]");
+        }
+
+        DocumentBuilder builder = this.createDocumentBuilder(factory, entityResolver, errorHandler);
+        return builder.parse(inputSource);
+    }
+```
+
+#### DocumentBuilderFactory
+
+在创建DocumentBuilderFactory时, 查看源码发现DocumentBuilderFactory为abstract, 所以对于这样一个抽象类,
+最后返回的是默认的com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl实例。
+
+```
+    return FactoryFinder.find(
+                /* The default property name according to the JAXP spec */
+                DocumentBuilderFactory.class, // "javax.xml.parsers.DocumentBuilderFactory"
+                /* The fallback implementation class name */
+                "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl");
+```
+
 
 [DomNodeType]: http://www.w3school.com.cn/xmldom/dom_nodetype.asp
 [JavaWorld]: http://www.javaworld.com/article/2077344/core-java/find-a-way-out-of-the-classloader-maze.html
-
+[InputSource]: http://docs.oracle.com/javase/7/docs/api/org/xml/sax/InputSource.html
 
 ## 参考文献
 
