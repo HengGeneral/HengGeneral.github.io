@@ -53,7 +53,10 @@ excerpt: "常用的linux命令记录"
 5.  过滤某个文本, 将除了某文本行之外的其它行打印出来;
 
     ```
-        grep -v error ./catalina.out
+        grep -v error ./catalina.out ##过滤error文本
+        
+        grep -v ^$ ./catalina.out ##过滤空行
+        
     ```
 
 6.  还可以与正则表达式结合使用, 使用之前注意查看该unix系统相应的参数。
