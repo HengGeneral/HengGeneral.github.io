@@ -172,3 +172,16 @@ excerpt: "常用的linux命令记录"
     ```
         curl https://XX.XX.XX.XX:9200/?pretty
     ```
+    
+#### tcpdump
+
+功能介绍: 打印网络数据包
+
+使用场景:
+
+1. 测试与指定服务器列表的通信
+
+    ```
+        tcpdump host host1 or host2 or host3
+    ```
+    
