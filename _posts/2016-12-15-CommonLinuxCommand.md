@@ -179,7 +179,7 @@ excerpt: "常用的linux命令记录"
 
 使用场景:
 
-1. 测试与指定服务器列表的通信
+1.  测试与指定服务器列表的通信
 
     ```
         tcpdump host host1 or host2 or host3
