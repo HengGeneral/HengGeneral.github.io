@@ -6,7 +6,7 @@ categories: [JAVA]
 author: liheng
 excerpt: "JAVA初始化"
 ---
-### 嵌套类
+### 初始化
 
 
 
