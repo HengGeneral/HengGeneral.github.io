@@ -220,6 +220,122 @@ public AbstractBeanDefinition parseBeanDefinitionElement(Element ele,
 }
 ```
 
+#### BeanDefinitionReaderUtils
+
+```
+    public static void registerBeanDefinition(BeanDefinitionHolder definitionHolder,
+            BeanDefinitionRegistry registry) throws BeanDefinitionStoreException {
+        String beanName = definitionHolder.getBeanName();
+        registry.registerBeanDefinition(beanName, definitionHolder.getBeanDefinition());
+        String[] aliases = definitionHolder.getAliases();
+        if(aliases != null) {
+            String[] var4 = aliases;
+            int var5 = aliases.length;
+
+            for(int var6 = 0; var6 < var5; ++var6) {
+                String alias = var4[var6];
+                registry.registerAlias(beanName, alias);
+            }
+        }
+
+    }
+```
+
+#### DefaultListableBeanFactory
+
+```
+    public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
+            throws BeanDefinitionStoreException {
+        Assert.hasText(beanName, "Bean name must not be empty");
+        Assert.notNull(beanDefinition, "BeanDefinition must not be null");
+        if(beanDefinition instanceof AbstractBeanDefinition) {
+            try {
+                ((AbstractBeanDefinition)beanDefinition).validate();
+            } catch (BeanDefinitionValidationException var9) {
+                throw new BeanDefinitionStoreException(
+                    beanDefinition.getResourceDescription(),
+                    beanName,
+                    "Validation of bean definition failed", var9);
+            }
+        }
+
+        BeanDefinition oldBeanDefinition = (BeanDefinition)this.beanDefinitionMap.get(beanName);
+        if(oldBeanDefinition != null) {
+            if(!this.isAllowBeanDefinitionOverriding()) {
+                throw new BeanDefinitionStoreException(
+                    beanDefinition.getResourceDescription(),
+                    beanName,
+                    "Cannot register bean definition [" + beanDefinition + "] for bean \'"
+                        + beanName + "\': There is already [" + oldBeanDefinition + "] bound.");
+            }
+
+            if(oldBeanDefinition.getRole() < beanDefinition.getRole()) {
+                if(this.logger.isWarnEnabled()) {
+                    this.logger.warn(
+                    "Overriding user-defined bean definition for bean \'" 
+                    + beanName + "\' with a framework-generated bean definition: replacing ["
+                     + oldBeanDefinition + "] with [" + beanDefinition + "]");
+                }
+            } else if(!beanDefinition.equals(oldBeanDefinition)) {
+                if(this.logger.isInfoEnabled()) {
+                    this.logger.info(
+                        "Overriding bean definition for bean \'" 
+                        + beanName + "\' with a different definition: replacing ["
+                         + oldBeanDefinition + "] with [" + beanDefinition + "]");
+                }
+            } else if(this.logger.isDebugEnabled()) {
+                this.logger.debug("Overriding bean definition for bean \'"
+                 + beanName + "\' with an equivalent definition: replacing ["
+                  + oldBeanDefinition + "] with [" + beanDefinition + "]");
+            }
+
+            this.beanDefinitionMap.put(beanName, beanDefinition);
+        } else {
+            if(this.hasBeanCreationStarted()) {
+                Map var4 = this.beanDefinitionMap;
+                synchronized(this.beanDefinitionMap) {
+                    this.beanDefinitionMap.put(beanName, beanDefinition);
+                    ArrayList updatedDefinitions = new ArrayList(this.beanDefinitionNames.size() + 1);
+                    updatedDefinitions.addAll(this.beanDefinitionNames);
+                    updatedDefinitions.add(beanName);
+                    this.beanDefinitionNames = updatedDefinitions;
+                    if(this.manualSingletonNames.contains(beanName)) {
+                        LinkedHashSet updatedSingletons = new LinkedHashSet(this.manualSingletonNames);
+                        updatedSingletons.remove(beanName);
+                        this.manualSingletonNames = updatedSingletons;
+                    }
+                }
+            } else {
+                this.beanDefinitionMap.put(beanName, beanDefinition);
+                this.beanDefinitionNames.add(beanName);
+                this.manualSingletonNames.remove(beanName);
+            }
+
+            this.frozenBeanDefinitionNames = null;
+        }
+
+        if(oldBeanDefinition != null || this.containsSingleton(beanName)) {
+            this.resetBeanDefinition(beanName);
+        }
+
+    }
+```    
+
+#### ReaderContext
+
+```
+    public void fireComponentRegistered(ComponentDefinition componentDefinition) {
+        this.eventListener.componentRegistered(componentDefinition);
+    }
+```    
+    
+#### EmptyReaderEventListener
+    
+```
+    public void componentRegistered(ComponentDefinition componentDefinition) {
+    }
+```
+    
 [PrePostProcessXML]: http://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/xml/DefaultBeanDefinitionDocumentReader.html#postProcessXml-org.w3c.dom.Element-
 
 ## 参考文献
