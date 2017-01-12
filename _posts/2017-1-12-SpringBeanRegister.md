@@ -74,7 +74,7 @@ excerpt: "Bean"
         }
 ```
 
-当遇到<bean />等默认标签时, 则进入parseDefaultElement(Element, BeanDefinitionParserDelegate)方法, 其源码如下:
+当遇到<bean/>等默认标签时, 则进入parseDefaultElement(Element, BeanDefinitionParserDelegate)方法, 其源码如下:
 
 ```
     private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate delegate) {
