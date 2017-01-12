@@ -28,26 +28,26 @@ excerpt: "Bean"
 接下来,就真正地进入Bean的解析阶段了, 进入doRegisterBeanDefinitions(Element)方法, 代码如下:
 
 ```
-    protected void doRegisterBeanDefinitions(Element root) {
-        BeanDefinitionParserDelegate parent = this.delegate;
-        this.delegate = this.createDelegate(this.getReaderContext(), root, parent);
+protected void doRegisterBeanDefinitions(Element root) {
+    BeanDefinitionParserDelegate parent = this.delegate;
+    this.delegate = this.createDelegate(this.getReaderContext(), root, parent);
         
-        //判断xmlns是否为空或者为"http://www.springframework.org/schema/beans"
-        if(this.delegate.isDefaultNamespace(root)) { 
-            String profileSpec = root.getAttribute("profile"); //beans属性profile
-            if(StringUtils.hasText(profileSpec)) {
-                String[] specifiedProfiles = StringUtils.tokenizeToStringArray(profileSpec, ",; ");
-                if(!this.getReaderContext().getEnvironment().acceptsProfiles(specifiedProfiles)) {
-                    return;
-                }
+    //判断xmlns是否为空或者为"http://www.springframework.org/schema/beans"
+    if(this.delegate.isDefaultNamespace(root)) { 
+        String profileSpec = root.getAttribute("profile"); //beans属性profile
+        if(StringUtils.hasText(profileSpec)) {
+            String[] specifiedProfiles = StringUtils.tokenizeToStringArray(profileSpec, ",; ");
+            if(!this.getReaderContext().getEnvironment().acceptsProfiles(specifiedProfiles)) {
+                return;
             }
         }
-
-        this.preProcessXml(root);
-        this.parseBeanDefinitions(root, this.delegate);
-        this.postProcessXml(root);
-        this.delegate = parent;
     }
+
+    this.preProcessXml(root);
+    this.parseBeanDefinitions(root, this.delegate);
+    this.postProcessXml(root);
+    this.delegate = parent;
+}
 ```
 
 其中, preProcessXml(Element)和postProcessXml(Element) 都是空方法, 它们的作用可以查看[官网][PrePostProcessXML]。
@@ -62,8 +62,7 @@ excerpt: "Bean"
                 if(node instanceof Element) {
                     Element ele = (Element)node;
                     if(delegate.isDefaultNamespace(ele)) {
-                        //解析beans下的子元素
-                        this.parseDefaultElement(ele, delegate);
+                        this.parseDefaultElement(ele, delegate);//解析beans下的子元素
                     } else {
                         delegate.parseCustomElement(ele);
                     }
@@ -77,17 +76,17 @@ excerpt: "Bean"
 当遇到<bean/>等默认标签时, 则进入parseDefaultElement(Element, BeanDefinitionParserDelegate)方法, 其源码如下:
 
 ```
-    private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate delegate) {
-        if(delegate.nodeNameEquals(ele, "import")) {
-            this.importBeanDefinitionResource(ele);
-        } else if(delegate.nodeNameEquals(ele, "alias")) {
-            this.processAliasRegistration(ele);
-        } else if(delegate.nodeNameEquals(ele, "bean")) {
-            this.processBeanDefinition(ele, delegate);
-        } else if(delegate.nodeNameEquals(ele, "beans")) {
-            this.doRegisterBeanDefinitions(ele);
-        }
-    }
+private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate delegate) {
+   if(delegate.nodeNameEquals(ele, "import")) {
+         this.importBeanDefinitionResource(ele);
+   } else if(delegate.nodeNameEquals(ele, "alias")) {
+        this.processAliasRegistration(ele);
+   } else if(delegate.nodeNameEquals(ele, "bean")) {
+        this.processBeanDefinition(ele, delegate);
+   } else if(delegate.nodeNameEquals(ele, "beans")) {
+        this.doRegisterBeanDefinitions(ele);
+   }
+}
 ```
 
 我们先以<bean />标签为例, 来看看processBeanDefinition(Element, BeanDefinitionParserDelegate), 代码如下:
@@ -99,9 +98,12 @@ excerpt: "Bean"
             bdHolder = delegate.decorateBeanDefinitionIfRequired(ele, bdHolder);
 
             try {
-                BeanDefinitionReaderUtils.registerBeanDefinition(bdHolder, this.getReaderContext().getRegistry());
+                BeanDefinitionReaderUtils.registerBeanDefinition(bdHolder,
+                 this.getReaderContext().getRegistry());
             } catch (BeanDefinitionStoreException var5) {
-                this.getReaderContext().error("Failed to register bean definition with name \'" + bdHolder.getBeanName() + "\'", ele, var5);
+                this.getReaderContext()
+                    .error("Failed to register bean definition with name \'"
+                        + bdHolder.getBeanName() + "\'", ele, var5);
             }
 
             this.getReaderContext().fireComponentRegistered(new BeanComponentDefinition(bdHolder));
