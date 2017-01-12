@@ -129,7 +129,8 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
         if(!StringUtils.hasText(id) && !aliases.isEmpty()) {
             beanName1 = (String)aliases.remove(0);
             if(this.logger.isDebugEnabled()) {
-                this.logger.debug("No XML \'id\' specified - using \'" + beanName1 + "\' as bean name and " + aliases + " as aliases");
+                this.logger.debug(
+                    "No XML \'id\' specified - using \'" + beanName1 + "\' as bean name and " + aliases + " as aliases");
             }
         }
 
@@ -142,17 +143,22 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
             if(!StringUtils.hasText(beanName1)) {
                 try {
                     if(containingBean != null) {
-                        beanName1 = BeanDefinitionReaderUtils.generateBeanName(beanDefinition, this.readerContext.getRegistry(), true);
+                        beanName1 = BeanDefinitionReaderUtils
+                            .generateBeanName(beanDefinition, this.readerContext.getRegistry(), true);
                     } else {
                         beanName1 = this.readerContext.generateBeanName(beanDefinition);
                         String aliasesArray = beanDefinition.getBeanClassName();
-                        if(aliasesArray != null && beanName1.startsWith(aliasesArray) && beanName1.length() > aliasesArray.length() && !this.readerContext.getRegistry().isBeanNameInUse(aliasesArray)) {
+                        if(aliasesArray != null 
+                                && beanName1.startsWith(aliasesArray) 
+                                && beanName1.length() > aliasesArray.length() 
+                                && !this.readerContext.getRegistry().isBeanNameInUse(aliasesArray)) {
                             aliases.add(aliasesArray);
                         }
                     }
 
                     if(this.logger.isDebugEnabled()) {
-                        this.logger.debug("Neither XML \'id\' nor \'name\' specified - using generated bean name [" + beanName1 + "]");
+                        this.logger.debug(
+                            "Neither XML \'id\' nor \'name\' specified - using generated bean name [" + beanName1 + "]");
                     }
                 } catch (Exception var9) {
                     this.error(var9.getMessage(), ele);
@@ -172,7 +178,8 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
 各个参数的配置来解析, 并封装到AbstractBeanDefinition中, 相应代码如下:
 
 ```
-    public AbstractBeanDefinition parseBeanDefinitionElement(Element ele, String beanName, BeanDefinition containingBean) {
+    public AbstractBeanDefinition parseBeanDefinitionElement(Element ele,
+                String beanName, BeanDefinition containingBean) {
         this.parseState.push(new BeanEntry(beanName));
         String className = null;
         if(ele.hasAttribute("class")) {
@@ -201,7 +208,8 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
         } catch (ClassNotFoundException var13) {
             this.error("Bean class [" + className + "] not found", ele, var13);
         } catch (NoClassDefFoundError var14) {
-            this.error("Class that bean class [" + className + "] depends on not found", ele, var14);
+            this.error(
+                "Class that bean class [" + className + "] depends on not found", ele, var14);
         } catch (Throwable var15) {
             this.error("Unexpected failure during bean definition parsing", ele, var15);
         } finally {
