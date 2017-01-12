@@ -92,31 +92,31 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
 我们先以<bean />标签为例, 来看看processBeanDefinition(Element, BeanDefinitionParserDelegate), 代码如下:
 
 ```
-    protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate delegate) {
-        BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele);
-        if(bdHolder != null) {
-            bdHolder = delegate.decorateBeanDefinitionIfRequired(ele, bdHolder);
+protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate delegate) {
+    BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele);
+    if(bdHolder != null) {
+        bdHolder = delegate.decorateBeanDefinitionIfRequired(ele, bdHolder);
 
-            try {
-                BeanDefinitionReaderUtils.registerBeanDefinition(bdHolder,
-                 this.getReaderContext().getRegistry());
-            } catch (BeanDefinitionStoreException var5) {
-                this.getReaderContext()
-                    .error("Failed to register bean definition with name \'"
-                        + bdHolder.getBeanName() + "\'", ele, var5);
-            }
-
-            this.getReaderContext().fireComponentRegistered(new BeanComponentDefinition(bdHolder));
+        try {
+            BeanDefinitionReaderUtils.registerBeanDefinition(bdHolder,
+                this.getReaderContext().getRegistry());
+        } catch (BeanDefinitionStoreException var5) {
+            this.getReaderContext()
+                .error("Failed to register bean definition with name \'"
+                    + bdHolder.getBeanName() + "\'", ele, var5);
         }
 
+        this.getReaderContext().fireComponentRegistered(new BeanComponentDefinition(bdHolder));
     }
+
+}
 ```
 
 #### BeanDefinitionParserDelegate
 我们先来看看parseBeanDefinitionElement(Element)方法, 代码如下:
 
 ```
-    public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, BeanDefinition containingBean) {
+public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, BeanDefinition containingBean) {
         String id = ele.getAttribute("id");
         String nameAttr = ele.getAttribute("name");
         ArrayList aliases = new ArrayList();
@@ -178,51 +178,52 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
 各个参数的配置来解析, 并封装到AbstractBeanDefinition中, 相应代码如下:
 
 ```
-    public AbstractBeanDefinition parseBeanDefinitionElement(Element ele,
+public AbstractBeanDefinition parseBeanDefinitionElement(Element ele,
                 String beanName, BeanDefinition containingBean) {
-        this.parseState.push(new BeanEntry(beanName));
-        String className = null;
-        if(ele.hasAttribute("class")) {
-            className = ele.getAttribute("class").trim();
-        }
-
-        try {
-            String ex = null;
-            if(ele.hasAttribute("parent")) {
-                ex = ele.getAttribute("parent");
-            }
-
-            AbstractBeanDefinition bd = this.createBeanDefinition(className, ex);
-            this.parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
-            bd.setDescription(DomUtils.getChildElementValueByTagName(ele, "description"));
-            this.parseMetaElements(ele, bd);
-            this.parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
-            this.parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
-            this.parseConstructorArgElements(ele, bd);
-            this.parsePropertyElements(ele, bd);
-            this.parseQualifierElements(ele, bd);
-            bd.setResource(this.readerContext.getResource());
-            bd.setSource(this.extractSource(ele));
-            AbstractBeanDefinition var7 = bd;
-            return var7;
-        } catch (ClassNotFoundException var13) {
-            this.error("Bean class [" + className + "] not found", ele, var13);
-        } catch (NoClassDefFoundError var14) {
-            this.error(
-                "Class that bean class [" + className + "] depends on not found", ele, var14);
-        } catch (Throwable var15) {
-            this.error("Unexpected failure during bean definition parsing", ele, var15);
-        } finally {
-            this.parseState.pop();
-        }
-
-        return null;
+    this.parseState.push(new BeanEntry(beanName));
+    String className = null;
+    if(ele.hasAttribute("class")) {
+       className = ele.getAttribute("class").trim();
     }
+
+    try {
+        String ex = null;
+        if(ele.hasAttribute("parent")) {
+            ex = ele.getAttribute("parent");
+        }
+
+        AbstractBeanDefinition bd = this.createBeanDefinition(className, ex);
+        this.parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
+        bd.setDescription(DomUtils.getChildElementValueByTagName(ele, "description"));
+        this.parseMetaElements(ele, bd);
+        this.parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
+        this.parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
+        this.parseConstructorArgElements(ele, bd);
+        this.parsePropertyElements(ele, bd);
+        this.parseQualifierElements(ele, bd);
+        bd.setResource(this.readerContext.getResource());
+        bd.setSource(this.extractSource(ele));
+        AbstractBeanDefinition var7 = bd;
+        return var7;
+    } catch (ClassNotFoundException var13) {
+        this.error("Bean class [" + className + "] not found", ele, var13);
+    } catch (NoClassDefFoundError var14) {
+        this.error(
+            "Class that bean class [" + className + "] depends on not found", ele, var14);
+    } catch (Throwable var15) {
+        this.error("Unexpected failure during bean definition parsing", ele, var15);
+    } finally {
+        this.parseState.pop();
+    }
+
+    return null;
+}
 ```
 
 [PrePostProcessXML]: http://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/xml/DefaultBeanDefinitionDocumentReader.html#postProcessXml-org.w3c.dom.Element-
 
 ## 参考文献
+1. <<Spring源码深度解析>>
 
 
 
