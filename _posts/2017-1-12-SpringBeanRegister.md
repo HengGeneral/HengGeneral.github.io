@@ -1,20 +1,66 @@
 ---
 layout: post
-title: Bean
+title: Bean的提取和注册
 tags:  [JAVA]
 categories: [JAVA]
 author: liheng
 excerpt: "Bean"
 ---
-## Bean
+## Bean的提取和注册
 
-当将XML转换为Document后, 解析来就是调用registerBeanDefinitions(Document, EncodedResource)提取和注册bean了。
+当将XML转换为Document后, 接下来就是调用registerBeanDefinitions(Document, EncodedResource)提取和注册bean了。
 
+#### XmlBeanDefinitionReader
+
+该方法的代码如下文所示, 其中doc则是[之前][XML2DOC]生成的Document的实例, resource参数则是EncodedResource实例。
+其中, 从[之前][XML2DOC]中代码可以知道, this.getRegistry()返回的则是之前创建的XmlBeanFactory实例。
+
+```
+   public int registerBeanDefinitions(Document doc, Resource resource)
+    throws BeanDefinitionStoreException {
+        BeanDefinitionDocumentReader documentReader = this.createBeanDefinitionDocumentReader();
+        int countBefore = this.getRegistry().getBeanDefinitionCount();
+        documentReader.registerBeanDefinitions(doc, this.createReaderContext(resource));
+        return this.getRegistry().getBeanDefinitionCount() - countBefore;
+    }
+```    
+
+```
+    //位于XmlBeanFactory的父类DefaultListableBeanFactory中
+    private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap(256);
+    
+    public int getBeanDefinitionCount() {
+        return this.beanDefinitionMap.size();
+    }
+```
+
+```
+    private ProblemReporter problemReporter = new FailFastProblemReporter();
+    private ReaderEventListener eventListener = new EmptyReaderEventListener();
+    private SourceExtractor sourceExtractor = new NullSourceExtractor();
+    
+    public XmlReaderContext createReaderContext(Resource resource) {
+        return new XmlReaderContext(resource,
+                                    this.problemReporter,
+                                    this.eventListener,
+                                    this.sourceExtractor,
+                                    this,
+                                    this.getNamespaceHandlerResolver());
+    }
+    
+    public NamespaceHandlerResolver getNamespaceHandlerResolver() {
+        if(this.namespaceHandlerResolver == null) {
+            this.namespaceHandlerResolver = this.createDefaultNamespaceHandlerResolver();
+        }
+
+        return this.namespaceHandlerResolver;
+    }    
+```
 
 #### DefaultBeanDefinitionDocumentReader
 
-最终执行到DefaultBeanDefinitionDocumentReader类的registerBeanDefinitions(Document, XmlReaderContext)方法,
-代码如下:
+之后, 会进入registerBeanDefinitions(Document, XmlReaderContext)方法中对readerContext进行赋值, 
+然后获取Document的根元素root, 基于root完成bean定义的注册, 代码如下:
 
 ```
     public void registerBeanDefinitions(Document doc, XmlReaderContext readerContext) {
@@ -73,7 +119,7 @@ protected void doRegisterBeanDefinitions(Element root) {
         }
 ```
 
-当遇到<bean/>等默认标签时, 则进入parseDefaultElement(Element, BeanDefinitionParserDelegate)方法, 其源码如下:
+当遇到4种默认标签(import, alias, bean, beans)时, 则进入parseDefaultElement(Element, BeanDefinitionParserDelegate)方法, 其源码如下:
 
 ```
 private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate delegate) {
@@ -89,7 +135,7 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
 }
 ```
 
-我们先以<bean />标签为例, 来看看processBeanDefinition(Element, BeanDefinitionParserDelegate), 代码如下:
+我们先以bean标签为例, 来看看processBeanDefinition(Element, BeanDefinitionParserDelegate), 代码如下:
 
 ```
 protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate delegate) {

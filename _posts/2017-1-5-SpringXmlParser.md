@@ -1,6 +1,6 @@
 ---
 layout: post
-title: XML解析
+title: XML解析成Document
 tags:  [JAVA]
 categories: [JAVA]
 author: liheng
@@ -123,7 +123,31 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
 
 #### XmlBeanDefinitionReader
 
-当xml文件完成ClassPathResource的封装后, 读取操作就交给XmlBeanDefinitionReader了, 代码如下(位于XmlBeanFactory.class中):
+当xml文件完成ClassPathResource的封装后, 读取操作就交给XmlBeanDefinitionReader了。
+然后创建XmlBeanFactory的实例并初始化一些变量, 
+然后作为给XmlBeanDefinitionReader的BeanDefinitionRegistry registry参数赋值构造XmlBeanDefinitionReader实例。
+代码如下(位于XmlBeanFactory.class中):
+
+```
+    private final BeanDefinitionRegistry registry;
+
+    protected AbstractBeanDefinitionReader(BeanDefinitionRegistry registry) {
+        Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+        this.registry = registry;
+        if(this.registry instanceof ResourceLoader) {
+            this.resourceLoader = (ResourceLoader)this.registry;
+        } else {
+            this.resourceLoader = new PathMatchingResourcePatternResolver();
+        }
+
+        if(this.registry instanceof EnvironmentCapable) {
+            this.environment = ((EnvironmentCapable)this.registry).getEnvironment();
+        } else {
+            this.environment = new StandardEnvironment();
+        }
+
+    }
+```
 
 ```
     this.reader = new XmlBeanDefinitionReader(this);
@@ -131,7 +155,7 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
 ```
 
 进入loadBeanDefinitions(resource)后, 首先完成Resource到EncodedResource的封装以用于对资源文件的编码进行处理。
-当指定了编码时, spring会使用相应的编码作为输入流的编码。两个代码片段如下:
+当指定了编码时, 之后spring将会使用相应的编码作为输入流的编码。两个代码片段如下:
 
 ```
     return this.loadBeanDefinitions(new EncodedResource(resource));
@@ -144,6 +168,25 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
         (this.encoding != null?
             new InputStreamReader(this.resource.getInputStream(), this.encoding)
                 :new InputStreamReader(this.resource.getInputStream()));
+    }
+```
+
+```
+    public InputStream getInputStream() throws IOException {
+        InputStream is;
+        if(this.clazz != null) {
+            is = this.clazz.getResourceAsStream(this.path);
+        } else if(this.classLoader != null) {
+            is = this.classLoader.getResourceAsStream(this.path);
+        } else {
+            is = ClassLoader.getSystemResourceAsStream(this.path);
+        }
+
+        if(is == null) {
+            throw new FileNotFoundException(this.getDescription() + " cannot be opened because it does not exist");
+        } else {
+            return is;
+        }
     }
 ```
 
@@ -186,8 +229,18 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
 
 #### DefaultDocumentLoader
 
-接下来进入DefaultDocumentLoader的loadDocument(InputSource, EntityResolver, ErrorHandler, int, boolean)方法,
-然后使用DocumentBuilder来将xml解析为Document。
+接下来进入DefaultDocumentLoader的loadDocument(InputSource, EntityResolver, ErrorHandler, int, boolean)方法。
+首先, 创建DocumentBuilderFactory实例, 查看创建DocumentBuilderFactory实例的源码会发现DocumentBuilderFactory为abstract,
+所以对于这样一个抽象类, 其实最后返回的是默认的com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl实例(DocumentBuilderFactory类中)。
+然后, 使用DocumentBuilder来将xml解析为Document。相应的代码片段如下:
+
+```
+    return FactoryFinder.find(
+                /* The default property name according to the JAXP spec */
+                DocumentBuilderFactory.class, // "javax.xml.parsers.DocumentBuilderFactory"
+                /* The fallback implementation class name */
+                "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl");
+```
 
 ```
     public Document loadDocument(InputSource inputSource, EntityResolver entityResolver,
@@ -201,19 +254,6 @@ ClassLoader中的方法直接使用resource名称来定位资源, 同时不会�
         DocumentBuilder builder = this.createDocumentBuilder(factory, entityResolver, errorHandler);
         return builder.parse(inputSource);
     }
-```
-
-#### DocumentBuilderFactory
-
-在创建DocumentBuilderFactory时, 查看源码发现DocumentBuilderFactory为abstract, 所以对于这样一个抽象类,
-最后返回的是默认的com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl实例。
-
-```
-    return FactoryFinder.find(
-                /* The default property name according to the JAXP spec */
-                DocumentBuilderFactory.class, // "javax.xml.parsers.DocumentBuilderFactory"
-                /* The fallback implementation class name */
-                "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl");
 ```
 
 
