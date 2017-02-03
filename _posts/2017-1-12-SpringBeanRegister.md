@@ -71,7 +71,9 @@ excerpt: "Bean"
     }
 ```
 
-接下来,就真正地进入Bean的解析阶段了, 进入doRegisterBeanDefinitions(Element)方法, 代码如下:
+接下来,就真正地进入Bean的解析阶段了, 进入doRegisterBeanDefinitions(Element)方法,
+其中 delegate 为代理BeanDefinitionParserDelegate实例,用于代理xml的解析;
+readerContext则是上文创建的XmlReaderContext实例, parent为null。 代码如下:
 
 ```
 protected void doRegisterBeanDefinitions(Element root) {
@@ -94,6 +96,17 @@ protected void doRegisterBeanDefinitions(Element root) {
     this.postProcessXml(root);
     this.delegate = parent;
 }
+
+protected BeanDefinitionParserDelegate createDelegate(XmlReaderContext readerContext,
+ Element root, BeanDefinitionParserDelegate parentDelegate) {
+    BeanDefinitionParserDelegate delegate = new BeanDefinitionParserDelegate(readerContext);
+    delegate.initDefaults(root, parentDelegate);
+    return delegate;
+}
+
+protected final XmlReaderContext getReaderContext() {
+    return this.readerContext;
+}
 ```
 
 其中, preProcessXml(Element)和postProcessXml(Element) 都是空方法, 它们的作用可以查看[官网][PrePostProcessXML]。
@@ -108,7 +121,7 @@ protected void doRegisterBeanDefinitions(Element root) {
                 if(node instanceof Element) {
                     Element ele = (Element)node;
                     if(delegate.isDefaultNamespace(ele)) {
-                        this.parseDefaultElement(ele, delegate);//解析beans下的子元素
+                        this.parseDefaultElement(ele, delegate);//解析xml中4种默认标签
                     } else {
                         delegate.parseCustomElement(ele);
                     }
@@ -135,7 +148,9 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
 }
 ```
 
-我们先以bean标签为例, 来看看processBeanDefinition(Element, BeanDefinitionParserDelegate), 代码如下:
+我们先以bean标签为例, 来看看processBeanDefinition(Element, BeanDefinitionParserDelegate),
+ 
+代码如下:
 
 ```
 protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate delegate) {
@@ -162,6 +177,11 @@ protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate d
 我们先来看看parseBeanDefinitionElement(Element)方法, 代码如下:
 
 ```
+public BeanDefinitionHolder parseBeanDefinitionElement(Element ele) {
+    return this.parseBeanDefinitionElement(ele, (BeanDefinition)null);
+}
+
+
 public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, BeanDefinition containingBean) {
         String id = ele.getAttribute("id");
         String nameAttr = ele.getAttribute("name");
