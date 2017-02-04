@@ -94,7 +94,7 @@ byte, short, int, long型变量的值可以根据int literals创建; 当long型�
 
 以字符F或者f结尾的浮点型字符为float literals, 否则则为double literals 其中包括以D或者d结尾的。
 
-#### 下划线(Underscore)
+#### **下划线(Underscore)**
 在jdk1.7及其后的版本中, 任意数量的下划线(_)可以出现在数值常量的各个位之间。这种特性, 可以用于数字的分组以提高代码的可读性。
 
 ```
@@ -165,11 +165,14 @@ Java 语言中的基本数据类型转换分为以下两种：
 1. 自动类型转换([Widening Primitive Conversion][Widening_Primitive_Conversion]): 编译器自动完成类型转换，不需要在程序中编写代码。
 2. 强制类型转换([Narrowing Primitive Conversion][Narrowing_Primitive_Conversion]): 强制编译器进行类型转换，必须在程序中编写代码。
 
-#### 自动类型转换
+#### **自动类型转换**
 
 自动类型转换，也称隐式类型转换，是指不需要书写代码，由系统自动完成的类型转换。由于实际开发中这样的类型转换很多，所以 Java 语言在设计时，没有为该操作设计语法，而是由 JVM 自动完成。
+
 转换规则：从存储范围小的类型到存储范围大的类型。
+
 具体规则为：byte → short(char) → int → long → float → double
+
 也就是说 byte 类型的变量可以自动转换为 short 类型，示例代码：
 
 ```
@@ -180,11 +183,14 @@ short sh = b;
 这里在给sh赋值时，JVM首先将b的值转换成short类型然后再赋值给sh。
 当然，在类型转换的时候也可以跳跃，就是byte也可以自动转换为int类型的。
 
-#### 强制类型转换
+#### **强制类型转换**
 
 强制类型转换，也称显式类型转换，是指必须书写代码才能完成的类型转换。该类类型转换很可能存在值差异过大或者精度的损失。
+
 转换规则: 从存储范围大的类型到存储范围小的类型。
+
 具体规则: double → float → long → int → short(char) → byte
+
 语法格式: (转换到的类型)需要转换的值, 实例代码如下:
 
 ```
