@@ -192,8 +192,8 @@ double d = 3.14;
 int i = (int) d;
 ```
 
-[Widening_Primitive_Conversion] : http://docs.oracle.com/javase/specs/jls/se7/html/jls-5.html#jls-5.1.2
-[Narrowing_Primitive_Conversion] : http://docs.oracle.com/javase/specs/jls/se7/html/jls-5.html#jls-5.1.3
+[Widening_Primitive_Conversion]:http://docs.oracle.com/javase/specs/jls/se7/html/jls-5.html#jls-5.1.2
+[Narrowing_Primitive_Conversion]:http://docs.oracle.com/javase/specs/jls/se7/html/jls-5.html#jls-5.1.3
 
 ### 参考文献
 1. https://docs.oracle.com/javase/tutorial/java/data/autoboxing.html
