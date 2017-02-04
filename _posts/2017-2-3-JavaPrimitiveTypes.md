@@ -9,10 +9,13 @@ excerpt: "java基本类型"
 ### Java基本类型
 
 Java基本类型是Java语言预定义的, 并由保留的关键字来命名。
-基本类型与引用类型最大的区别, 我认为就是它并不和其它类型的变量并不share states, 即改变某个基本类型变量的值,不会对其他变量造成影响。
+基本类型与引用类型最大的区别, 就是它并不和其它类型的变量share states, 即改变某个基本类型变量的值,不会对其他变量造成影响。
 Java语言支持8种基本类型, 这8种类型分为三大类: 布尔型(boolean), 字符型(char)和数值型(byte, short, int, long, float, double)。
+这里可从相应包装类的继承关系看出, 如下:
 
-然而, 这8种基本类型的变量并不是对象, 在jdk1.5之前, 这些基本类型的变量并不能直接运用在对于面向对象的操作中, 需要进行包装成相应的包装类(wrapper class)。
+![继承关系](/images/java/primitive_types.png)
+
+然而, 这8种基本类型的变量并不是对象, 在jdk1.5之前, 这些基本类型的变量并不能直接运用在对于面向对象的操作中, 需要进行包装成相应的包装类实例(wrapper class)。
 为了简化这个操作, java设计者引入了autoboxing和unboxing。同时, 该操作由编译器自动完成。
 
 这8种基本类型,以及相应的包装类如下:
@@ -70,11 +73,6 @@ bits: 64 (Double.SIZE)
 wrapper class: Double.class
 
 default value: 0.0
-
-包装类的继承关系如下:
-
-![继承关系](/images/java/primitive_types.png)
-
 
 ***
 
