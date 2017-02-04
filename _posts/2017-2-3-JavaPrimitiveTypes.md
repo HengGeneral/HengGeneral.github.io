@@ -84,13 +84,13 @@ default value: 0.0
 
 ### 字符
 
-#### 整型字符(Integer Literals)
+#### **整型字符(Integer Literals)**
 
 以字符L或者l结尾的整型字符为long literals, 否则则为int literals。
 
 byte, short, int, long型变量的值可以根据int literals创建; 当long型变量的值超过了int的范围, 则需要使用long literals创建。
 
-#### 浮点字符(Floating-Point Literals)
+#### **浮点字符(Floating-Point Literals)**
 
 以字符F或者f结尾的浮点型字符为float literals, 否则则为double literals 其中包括以D或者d结尾的。
 
