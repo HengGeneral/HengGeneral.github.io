@@ -247,6 +247,7 @@ String类的hashCode()方法, 如下:
 ```
 
 HashMap类的查询操作源码, 如下:
+
 ```
  /**
      * Implements Map.get and related methods
@@ -261,7 +262,8 @@ HashMap类的查询操作源码, 如下:
         int n;
         K k;
         //先查看该key被分配到哪个槽里
-        if ((tab = table) != null && (n = tab.length) > 0 && (first = tab[(n - 1) & hash]) != null) {
+        if ((tab = table) != null && (n = tab.length) > 0 
+            && (first = tab[(n - 1) & hash]) != null) {
             //先检查头结点
             if (first.hash == hash &&
                 ((k = first.key) == key || (key != null && key.equals(k))))
