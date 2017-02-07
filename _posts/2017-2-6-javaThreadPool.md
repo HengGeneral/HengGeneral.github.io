@@ -28,6 +28,146 @@ Executors.newSingleThreadExecutor() 来创建一次只能执行一个task地线�
 
 ### ThreadPoolExecutor类
 
+该类的继承关系如下:
+
+![继承关系](/images/java/threadPoolExecutor.png)
+
+Executor接口如下:
+
+```
+public interface Executor {
+
+    /**
+     * Executes the given command at some time in the future.
+     * The command may execute 
+     *          in a new thread(新创建的线程), 
+     *          in a pooled thread(线程池中的线程), 
+     *          or in the calling thread(调用者), 
+     * at the discretion of the Executor implementation.
+     *
+     * @param command the runnable task
+     * @throws RejectedExecutionException if this task cannot be accepted for execution
+     * @throws NullPointerException if command is null
+     */
+    void execute(Runnable command);
+}
+```
+
+ExecutorService接口, 继承了Executor接口。其代码如下:
+
+```
+    /**
+     * 当以前提交的线程执行完后才开始出发shutdown操作,在此期间不能再添加新的任务.
+     * 多次调用该函数, 不会有附作用.
+     *
+     * 该方法不会等待之前提交的线程结束完才返回, 如果需要这样可以使用awaitTermination方法
+     * @throws SecurityException
+     */
+    void shutdown();
+```
+
+下面是ThreadPoolExecutor.class对ExecutorService接口的shutdown方法的实现, 代码如下:
+
+```
+    private final ReentrantLock mainLock = new ReentrantLock();
+    
+    public void shutdown() {
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            checkShutdownAccess();
+            advanceRunState(SHUTDOWN);
+            interruptIdleWorkers();
+            onShutdown(); // hook for ScheduledThreadPoolExecutor
+        } finally {
+            mainLock.unlock();
+        }
+        tryTerminate();
+    }
+    
+    private void checkShutdownAccess() {
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkPermission(shutdownPerm);
+            final ReentrantLock mainLock = this.mainLock;
+            mainLock.lock();
+            try {
+                for (Worker w : workers)
+                    security.checkAccess(w.thread);
+            } finally {
+                mainLock.unlock();
+            }
+        }
+    }
+    
+    private void advanceRunState(int targetState) {
+        for (;;) {
+            int c = ctl.get();
+            if (runStateAtLeast(c, targetState) ||
+                ctl.compareAndSet(c, ctlOf(targetState, workerCountOf(c))))
+                break;
+        }
+    }
+    
+    private void interruptIdleWorkers() {
+        interruptIdleWorkers(false);
+    }
+    
+    private void interruptIdleWorkers(boolean onlyOne) {
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            for (Worker w : workers) {
+                Thread t = w.thread;
+                if (!t.isInterrupted() && w.tryLock()) {
+                    try {
+                        t.interrupt();
+                    } catch (SecurityException ignore) {
+                    } finally {
+                        w.unlock();
+                    }
+                }
+                if (onlyOne)
+                    break;
+            }
+        } finally {
+            mainLock.unlock();
+        }
+    }
+    
+    /**
+     * Performs any further cleanup following run state transition on
+     * invocation of shutdown.  A no-op here, but used by
+     * ScheduledThreadPoolExecutor to cancel delayed tasks.
+     */
+    void onShutdown() {
+    }
+    
+```
+
+
+
+```
+/**
+     * Attempts to stop all actively executing tasks, halts the
+     * processing of waiting tasks, and returns a list of the tasks
+     * that were awaiting execution.
+     *
+     * <p>This method does not wait for actively executing tasks to
+     * terminate.  Use {@link #awaitTermination awaitTermination} to
+     * do that.
+     *
+     * <p>There are no guarantees beyond best-effort attempts to stop
+     * processing actively executing tasks.  For example, typical
+     * implementations will cancel via {@link Thread#interrupt}, so any
+     * task that fails to respond to interrupts may never terminate.
+     *
+     * @return list of tasks that never commenced execution
+     * @throws SecurityException
+     */
+    List<Runnable> shutdownNow();
+```
+    
 该类的4个构造函数, 分别如下:
 
 ```
