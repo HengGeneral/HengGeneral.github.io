@@ -66,7 +66,7 @@ ExecutorService接口, 继承了Executor接口。其代码如下:
     void shutdown();
 ```
 
-下面是ThreadPoolExecutor.class对ExecutorService接口的shutdown方法的实现, 代码如下:
+下面是ThreadPoolExecutor.class对ExecutorService接口的shutdown()方法的实现, 代码如下:
 
 ```
     private final ReentrantLock mainLock = new ReentrantLock();
@@ -85,30 +85,6 @@ ExecutorService接口, 继承了Executor接口。其代码如下:
         tryTerminate();
     }
     
-    private void checkShutdownAccess() {
-        SecurityManager security = System.getSecurityManager();
-        if (security != null) {
-            security.checkPermission(shutdownPerm);
-            final ReentrantLock mainLock = this.mainLock;
-            mainLock.lock();
-            try {
-                for (Worker w : workers)
-                    security.checkAccess(w.thread);
-            } finally {
-                mainLock.unlock();
-            }
-        }
-    }
-    
-    private void advanceRunState(int targetState) {
-        for (;;) {
-            int c = ctl.get();
-            if (runStateAtLeast(c, targetState) ||
-                ctl.compareAndSet(c, ctlOf(targetState, workerCountOf(c))))
-                break;
-        }
-    }
-    
     private void interruptIdleWorkers() {
         interruptIdleWorkers(false);
     }
@@ -119,6 +95,8 @@ ExecutorService接口, 继承了Executor接口。其代码如下:
         try {
             for (Worker w : workers) {
                 Thread t = w.thread;
+                //若worker正在运行时, w.tryLock()将返回false
+                //因此该方法是interrupt空闲的woker
                 if (!t.isInterrupted() && w.tryLock()) {
                     try {
                         t.interrupt();
@@ -135,17 +113,10 @@ ExecutorService接口, 继承了Executor接口。其代码如下:
         }
     }
     
-    /**
-     * Performs any further cleanup following run state transition on
-     * invocation of shutdown.  A no-op here, but used by
-     * ScheduledThreadPoolExecutor to cancel delayed tasks.
-     */
-    void onShutdown() {
-    }
-    
 ```
+其它类对该接口的实现后续再补充。
 
-
+ExecutorService接口中shutdownNow()方法如下:
 
 ```
 /**
@@ -153,6 +124,7 @@ ExecutorService接口, 继承了Executor接口。其代码如下:
      * processing of waiting tasks, and returns a list of the tasks
      * that were awaiting execution.
      *
+     * 尝试停止所有
      * <p>This method does not wait for actively executing tasks to
      * terminate.  Use {@link #awaitTermination awaitTermination} to
      * do that.
@@ -167,7 +139,9 @@ ExecutorService接口, 继承了Executor接口。其代码如下:
      */
     List<Runnable> shutdownNow();
 ```
-    
+
+
+
 该类的4个构造函数, 分别如下:
 
 ```
@@ -413,3 +387,4 @@ LinkedBlockingQueue会默认一个类似无限大小的容量（Integer.MAX_VALU
 4. https://docs.oracle.com/javase/tutorial/essential/concurrency/index.html
 5. http://blog.csdn.net/johnstrive/article/details/50667557
 6. http://ifeve.com/customizing-concurrency-classes-4/
+7. https://github.com/zhanjindong/ReadTheJDK/blob/master/src/main/java/java/util/concurrent/ThreadPoolExecutor.java
