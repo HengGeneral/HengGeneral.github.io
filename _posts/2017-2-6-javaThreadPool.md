@@ -26,7 +26,9 @@ excerpt: "java 线程池"
 除此之外, Executors.newCachedThreadPool() 来创建可扩展的线程池,
 Executors.newSingleThreadExecutor() 来创建一次只能执行一个task地线程池。
 
-### ThreadPoolExecutor类
+## ThreadPoolExecutor类
+
+### 类结构概览
 
 该类的继承关系如下:
 
@@ -53,7 +55,7 @@ public interface Executor {
 }
 ```
 
-ExecutorService接口, 继承了Executor接口。其代码如下:
+ExecutorService接口, shutdown()方法代码如下:
 
 ```
     /**
@@ -119,28 +121,215 @@ ExecutorService接口, 继承了Executor接口。其代码如下:
 ExecutorService接口中shutdownNow()方法如下:
 
 ```
-/**
-     * Attempts to stop all actively executing tasks, halts the
-     * processing of waiting tasks, and returns a list of the tasks
-     * that were awaiting execution.
+    /**
+     * 尝试停止所有正在执行任务的线程(尽最大努力), 并返回那些等待执行的任务
+     * 
+     * 该方法不会等到执行任务的线程结束后返回, 当然如果需要这样可以通过awaitTermination方法
      *
-     * 尝试停止所有
-     * <p>This method does not wait for actively executing tasks to
-     * terminate.  Use {@link #awaitTermination awaitTermination} to
-     * do that.
-     *
-     * <p>There are no guarantees beyond best-effort attempts to stop
-     * processing actively executing tasks.  For example, typical
-     * implementations will cancel via {@link Thread#interrupt}, so any
-     * task that fails to respond to interrupts may never terminate.
-     *
-     * @return list of tasks that never commenced execution
+     * @return 返回任务的列表
      * @throws SecurityException
      */
     List<Runnable> shutdownNow();
 ```
 
+下面是ThreadPoolExecutor.class对ExecutorService接口的shutdownNow()方法的实现, 代码如下:
 
+```
+    public List<Runnable> shutdownNow() {
+        List<Runnable> tasks;
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            checkShutdownAccess();
+            advanceRunState(STOP);
+            interruptWorkers();
+            tasks = drainQueue();
+        } finally {
+            mainLock.unlock();
+        }
+        tryTerminate();
+        return tasks;
+    }
+    
+    private void interruptWorkers() {
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            for (Worker w : workers)
+                w.interruptIfStarted();
+        } finally {
+            mainLock.unlock();
+        }
+    }
+    
+    private List<Runnable> drainQueue() {
+        BlockingQueue<Runnable> q = workQueue;
+        ArrayList<Runnable> taskList = new ArrayList<Runnable>();
+        q.drainTo(taskList);
+        if (!q.isEmpty()) {
+            for (Runnable r : q.toArray(new Runnable[0])) {
+                if (q.remove(r))
+                    taskList.add(r);
+            }
+        }
+        return taskList;
+    }
+    
+    final void tryTerminate() {
+        for (;;) {
+            int c = ctl.get();
+            //之前, 已经将状态设置成STOP
+            if (isRunning(c) ||
+                runStateAtLeast(c, TIDYING) ||
+                (runStateOf(c) == SHUTDOWN && ! workQueue.isEmpty()))
+                return;
+                
+            //走到这一步说明线程池已经不再运行，阻塞队列已经没有任务，但是还要回收正在工作的Worker
+            if (workerCountOf(c) != 0) { // Eligible to terminate
+                // 由于线程池不运行了，调用了线程池的关闭方法，一次只关一个woker
+                // 每次只中断一个是因为processWorkerExit时，还会执行tryTerminate，自动中断下一个空闲的worker
+                interruptIdleWorkers(ONLY_ONE);
+                return;
+            }
+
+            final ReentrantLock mainLock = this.mainLock;
+            mainLock.lock();
+            try {
+                if (ctl.compareAndSet(c, ctlOf(TIDYING, 0))) {
+                    try {
+                        terminated();
+                    } finally {
+                        ctl.set(ctlOf(TERMINATED, 0));
+                        termination.signalAll();
+                    }
+                    return;
+                }
+            } finally {
+                mainLock.unlock();
+            }
+            // else retry on failed CAS
+        }
+    }
+```
+  
+下面是ThreadPoolExecutor.class对ExecutorService接口的 execute() 方法的实现, 代码如下:
+
+```
+    public Future<?> submit(Runnable task) {
+        if (task == null) throw new NullPointerException();
+        RunnableFuture<Void> ftask = newTaskFor(task, null);
+        execute(ftask);
+        return ftask;
+    }
+    
+    public void execute(Runnable command) {
+        if (command == null)
+            throw new NullPointerException();
+        /*
+         * 过程分3步:
+         *
+         * 1. 如果正在执行的线程数小于corePoolSize, 试图新建一个线程来执行新的task。
+         * addWorker()会检查线程池执行的状态和当前的线程数, 以免中途新创建了线程
+         *
+         * 2. 如果线程可以成功地加入队列中, 然后还需要doule-check线程池是否在运行
+         * 如果没有运行, 则还需要从队列中删除task,同时关闭idle线程, 并reject;
+         * 如果恰好所有的woker挂掉了, 即当前worker数目还为0, 则添加新的idle worker
+         *
+         * 3. 如果不能加入队列, 那么我们尝试添加一个新的线程。如果失败, 就得reject了。
+         */
+        int c = ctl.get();
+        if (workerCountOf(c) < corePoolSize) {
+            if (addWorker(command, true))
+                return;
+            c = ctl.get();
+        }
+        if (isRunning(c) && workQueue.offer(command)) {
+            int recheck = ctl.get();
+            if (! isRunning(recheck) && remove(command))
+                reject(command);
+            else if (workerCountOf(recheck) == 0)
+                addWorker(null, false);
+        }
+        else if (!addWorker(command, false))
+            reject(command);
+    }
+    
+    /**
+     * @param core true表示走的还是corePoolSize, 否则就走的maximumPoolSize
+     * @return 成功则返回true
+     */
+    private boolean addWorker(Runnable firstTask, boolean core) {
+        retry:
+        for (;;) {
+            int c = ctl.get();
+            int rs = runStateOf(c);
+
+            // Check if queue empty only if necessary.
+            if (rs >= SHUTDOWN &&
+                ! (rs == SHUTDOWN &&
+                   firstTask == null &&
+                   ! workQueue.isEmpty()))
+                return false;
+
+            for (;;) {
+                int wc = workerCountOf(c);
+                if (wc >= CAPACITY ||
+                    wc >= (core ? corePoolSize : maximumPoolSize))
+                    return false;
+                if (compareAndIncrementWorkerCount(c))
+                    break retry;
+                c = ctl.get();  // Re-read ctl
+                if (runStateOf(c) != rs)
+                    continue retry;
+                // else CAS failed due to workerCount change; retry inner loop
+            }
+        }
+
+        boolean workerStarted = false;
+        boolean workerAdded = false;
+        Worker w = null;
+        try {
+            w = new Worker(firstTask);
+            final Thread t = w.thread;
+            if (t != null) {
+                final ReentrantLock mainLock = this.mainLock;
+                mainLock.lock();
+                try {
+                    // Recheck while holding lock.
+                    // Back out on ThreadFactory failure or if
+                    // shut down before lock acquired.
+                    int rs = runStateOf(ctl.get());
+
+                    if (rs < SHUTDOWN ||
+                        (rs == SHUTDOWN && firstTask == null)) {
+                        if (t.isAlive()) // precheck that t is startable
+                            throw new IllegalThreadStateException();
+                        workers.add(w);
+                        int s = workers.size();
+                        if (s > largestPoolSize)
+                            largestPoolSize = s;
+                        workerAdded = true;
+                    }
+                } finally {
+                    mainLock.unlock();
+                }
+                if (workerAdded) {
+                    t.start();
+                    workerStarted = true;
+                }
+            }
+        } finally {
+            if (! workerStarted)
+                addWorkerFailed(w);
+        }
+        return workerStarted;
+    }
+```
+
+### 线程池状态转换
+
+
+### 线程池的创建
 
 该类的4个构造函数, 分别如下:
 
