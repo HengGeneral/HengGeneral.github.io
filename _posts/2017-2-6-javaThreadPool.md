@@ -328,6 +328,56 @@ ExecutorService接口中shutdownNow()方法如下:
 
 ### 线程池状态转换
 
+ThreadPoolExecutor状态有Running, SHUTDOWN, STOP, TIDYING 和 TERMINATED, 各个状态对应的值如下:
+
+```
+    private static final int COUNT_BITS = Integer.SIZE - 3;
+    
+    //-1 << COUNT_BITS = 11111111111111111111111111111111 << 29
+    //                 = 11100000000000000000000000000000(高3位为111)
+    private static final int RUNNING    = -1 << COUNT_BITS;
+    
+    //0 << COUNT_BITS = 00000000000000000000000000000000 << 29
+    //                = 00000000000000000000000000000000(前3位为000)
+    private static final int SHUTDOWN   =  0 << COUNT_BITS;
+    
+    //1 << COUNT_BITS = 00000000000000000000000000000001 << 29
+    //                = 00100000000000000000000000000000(前3位为001)
+    private static final int STOP       =  1 << COUNT_BITS;
+    
+    //2 << COUNT_BITS = 00000000000000000000000000000010 << 29
+    //                = 01000000000000000000000000000000(前3位为010)
+    private static final int TIDYING    =  2 << COUNT_BITS;
+    
+    //3 << COUNT_BITS = 00000000000000000000000000000011 << 29
+    //                = 01100000000000000000000000000000(前3位为011)
+    private static final int TERMINATED =  3 << COUNT_BITS;
+    
+    /* ctl中值的高3位表示线程池的状态, 后29位用来表示worker的数目 */
+    private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+    
+    //(1 << COUNT_BITS) - 1 = 00011111111111111111111111111111
+    private static final int CAPACITY   = (1 << COUNT_BITS) - 1;
+    
+    private static int runStateOf(int c)     { return c & ~CAPACITY; }
+    
+    private static int workerCountOf(int c)  { return c & CAPACITY; }
+    
+    //根据状态和数量两个值的或, 用于以后更新ctl值
+    private static int ctlOf(int rs, int wc) { return rs | wc; }
+``` 
+
+各个状态对线程池的控制如下:
+
+*   RUNNING:  接收新的任务, 处理已经加入队列中的任务;
+*   SHUTDOWN: 不再接收新的任务, 处理已经加入队列中的任务;
+*   STOP:     不再接收新的任务, 也不再处理已经加入队列中的任务, 同时终止正在执行的任务;
+*   TIDYING:  所有的任务都已结束, worker数为0, 则会进入执行TIDYING状态, 之后会执行terminated()方法;
+*   TERMINATED: terminated()钩子执行完毕后就进入该状态;
+
+ThreadPoolExecutor状态迁移如下:
+
+![状态迁移](/images/java/threadPoolState.png)
 
 ### 线程池的创建
 
