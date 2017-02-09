@@ -375,6 +375,7 @@ ThreadPoolExecutor状态有Running, SHUTDOWN, STOP, TIDYING 和 TERMINATED, 各�
 *   TIDYING:  所有的任务都已结束, worker数为0, 则会进入执行TIDYING状态, 之后会执行terminated()方法;
 *   TERMINATED: terminated()钩子执行完毕后就进入该状态;
 
+
 ThreadPoolExecutor状态迁移如下:
 
 ![状态迁移](/images/java/threadPoolState.png)
