@@ -98,6 +98,112 @@ object.wait()方法, 也是使得当前线程暂停执行一段时间, 等待被
 
 ### 线程创建
 
+1.继承Thread类创建线程, 代码如下:
+
+```
+    private class WorkerThread extends Thread {
+		public WorkerThread(){
+			this.setName(batchQueueName + THREAD_INDEX++);
+		}
+		
+		public long timestamp = 0;
+		public final ArrayList<E> buffer = new ArrayList<E>(bufferSize);
+		
+		@Override public void run(){
+			dispatch(WorkerThread.this);
+		}
+	}
+```
+
+
+2.实现Runnable接口, 代码如下:
+
+```
+    private final class Worker extends AbstractQueuedSynchronizer implements Runnable {
+        /**
+         * This class will never be serialized, but we provide a
+         * serialVersionUID to suppress a javac warning.
+         */
+        private static final long serialVersionUID = 6138294804551838833L;
+
+        /** Thread this worker is running in.  Null if factory fails. */
+        final Thread thread;
+        /** Initial task to run.  Possibly null. */
+        Runnable firstTask;
+        /** Per-thread task counter */
+        volatile long completedTasks;
+
+        /**
+         * Creates with given first task and thread from ThreadFactory.
+         * @param firstTask the first task (null if none)
+         */
+        Worker(Runnable firstTask) {
+            setState(-1); // inhibit interrupts until runWorker
+            this.firstTask = firstTask;
+            this.thread = getThreadFactory().newThread(this);
+        }
+
+        /** Delegates main run loop to outer runWorker  */
+        public void run() {
+            runWorker(this);
+        }
+    }    
+```
+
+3.实现Callable接口, 再适配成实现Runnable接口的类, 如FutureTask类;
+
+```
+    public class FutureTask<V> implements RunnableFuture<V> {
+        private Callable<V> callable;
+        
+        public FutureTask(Callable<V> callable) {
+            if (callable == null)
+                throw new NullPointerException();
+            this.callable = callable;
+            this.state = NEW;       // ensure visibility of callable
+        }
+    
+        public FutureTask(Runnable runnable, V result) {
+            this.callable = Executors.callable(runnable, result);
+            this.state = NEW;       // ensure visibility of callable
+        }
+        
+        public void run() {
+            if (state != NEW ||
+                !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                             null, Thread.currentThread()))
+                return;
+            try {
+                Callable<V> c = callable;
+                if (c != null && state == NEW) {
+                    V result;
+                    boolean ran;
+                    try {
+                        result = c.call();
+                        ran = true;
+                    } catch (Throwable ex) {
+                        result = null;
+                        ran = false;
+                        setException(ex);
+                    }
+                    if (ran)
+                        set(result);
+                }
+            } finally {
+                // runner must be non-null until state is settled to
+                // prevent concurrent calls to run()
+                runner = null;
+                // state must be re-read after nulling runner to prevent
+                // leaked interrupts
+                int s = state;
+                if (s >= INTERRUPTING)
+                    handlePossibleCancellationInterrupt(s);
+            }
+        }
+        ... 
+    }    
+```
+
 ### 常用方法
 
 ### 生命周期
