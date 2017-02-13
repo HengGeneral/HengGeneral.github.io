@@ -206,10 +206,99 @@ object.wait()方法, 也是使得当前线程暂停执行一段时间, 等待被
 
 ### 常用方法
 
+#### join()方法
+```
+    /*
+     * 等待至多millis毫秒, 直至线程结束; 当millis为0时, 表示一直等待直至线程结束;
+     */    
+    public final synchronized void join(long millis) throws InterruptedException {
+        long base = System.currentTimeMillis();
+        long now = 0;
+
+        if (millis < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+
+        if (millis == 0) {
+            while (isAlive()) {
+                wait(0);
+            }
+        } else {
+            while (isAlive()) {
+                long delay = millis - now;
+                if (delay <= 0) {
+                    break;
+                }
+                wait(delay);
+                now = System.currentTimeMillis() - base;
+            }
+        }
+    }
+
+    /**
+     * 等待某线程, 直至该线程结束;
+     */
+    public final void join() throws InterruptedException {
+        join(0);
+    }
+```
+
 ### 生命周期
 
+线程有6个状态: NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING 和 TERMINATED。每个状态的说明如下:
 
+```
+    public enum State {
+        /**
+         * 新创建但还尚未start线程所处于的状态;
+         */
+        NEW,
 
+        /**
+         * 在jvm中正在执行或者等待调度器调度的线程所对应的状态;
+         */
+        RUNNABLE,
+
+        /**
+         * 等待获得管程锁的线程所对应的状态(用于互斥);
+         * 处于阻塞状态的线程表示该线程想要进入synchronized的代码块/方法,
+         * 或者在执行wait()方法后需要重新进入synchronized的代码块/方法
+         */
+        BLOCKED,
+
+        /**
+         * 等待线程所对应的状态(用于同步);
+         * 若一个线程处于等待状态则表明该线程等待另一个线程完成某个特定的操作,
+         * 如object.wait()方法等待其他线程调用类似于object.notify()等操作。
+         * 当执行以下三种方法后, 标志着该线程进入等待状态:
+         *   object.wait()方法 //等待其他线程执行notify()方法
+         *   thread.join()方法 //等待其他线程结束
+         *   LockSupport.park()方法 
+         */
+        WAITING,
+
+        /**
+         * 指定等待时间的线程所对应的状态(用于同步);
+         * 当执行以下几种方法后, 标志着该线程进入timed-waiting状态;
+         *   thread.sleep()方法
+         *   object.wait(long)方法
+         *   thread.join(long)方法
+         *   LockSupport.parkNanos()方法
+         *   LockSupport#parkUntil()方法
+         * </ul>
+         */
+        TIMED_WAITING,
+
+        /**
+         * 线程完成执行并已经结束线程所对应的状态;
+         */
+        TERMINATED;
+    }
+```
+
+6种状态的迁移关系, 如下图所示:
+
+![threadState](/images/java/threadState.png)
 
 
 ### 参考文献:
@@ -222,3 +311,4 @@ object.wait()方法, 也是使得当前线程暂停执行一段时间, 等待被
 7. https://waylau.gitbooks.io/essential-java/docs/concurrency-Processes%20and%20Threads.html
 8. https://www.kancloud.cn/seaboat/java-concurrent/117878
 9. http://www.java67.com/2012/08/what-are-difference-between-wait-and.html
+10. http://www.uml-diagrams.org/examples/java-6-thread-state-machine-diagram-example.html
