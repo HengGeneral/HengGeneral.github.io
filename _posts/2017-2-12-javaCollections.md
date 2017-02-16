@@ -471,12 +471,20 @@ LinkedList就是所说的双向链表。和 ArrayList 一样, LinkedList也是 u
 
 #### Vector
 
-#### 其它
+Vector数据存储和ArrayList几乎一样, 区别是增删等方法是synchronized。
+另外, iterator 也是 fail-fast(快速失败): 在 iterator 创建之后, 任何对 list 的结构化修改时(如add(), remove()方法),
+iterator 都会抛出 ConcurrentModificationException。因此, 在遇到并发修改时, 迭代器为了避免有风险以及不确定地行为的出现, 都会快速失败。
+注意，迭代器的快速失败行为无法得到保证。由于迭代器中的方法并不完全是同步的, 也无法避免任何不同步的并发修改,
+所以快速失败迭代器也只是会尽最大努力抛出 ConcurrentModificationException。
+所以, fail-fast机制并不是针对synchronized和unsynchronized, 而是为迭代器准备的。为什么呢? 
+因为创建了迭代器时, expectCount赋值为modCount, 当一个执行next()时返回元素E, 之后vector又直接调用add()在该位置添加一个元素, 
+T1下次next()方法会再次返回E元素, fail-fast就是为了避免这种错误。
+另外, 迭代器下面的方法并不是完全同步的, 变量也不是volatile, 若有并发地操作, 还是会出现不一致的情况, 所以fail-fast也只是尽最大努力抛出 ConcurrentModificationException。
 
-### Map
 
-### Set
+### 其它
 
 ### 参考文献:
 1. https://docs.oracle.com/javase/8/docs/technotes/guides/collections/overview.html
 2. http://stackoverflow.com/questions/200384/constant-amortized-time/
+3. http://stackoverflow.com/questions/4479554/why-vector-methods-iterator-and-listiterator-are-fail-fast
