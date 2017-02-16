@@ -7,14 +7,12 @@ author: liheng
 excerpt: "java 集合框架"
 ---
 
-### 
-
 ## Collection 
 
 ### List
 
-List有序的集合接口。使用该集合时, 用户可以控制元素插入到集合中的位置, 也可以元素的索引来访问该元素。
-和Set不同, List允许集合中有重复的元素。 当然, 若是想实现不包含重复元素的list也是可以的, 但还是希望尽量不要这样做。
+List, 有序的集合接口。使用该集合时, 用户可以控制元素插入到集合中的位置, 也可以使用元素的索引来访问该元素。
+和 Set 不同的是, List允许集合中有重复的元素。 当然, 若是想实现不包含重复元素的list也是可以的, 但还是希望尽量不要这样做。
 接口中的方法如下:
 
 ```
@@ -40,30 +38,30 @@ List有序的集合接口。使用该集合时, 用户可以控制元素插入�
 
 ***
 
-**注意**: List可以在集合中插入它本身作为集合的某个元素, 尤其要小心equals()方法和hashcode()方法可能就不好使了。
+**注意**: List可以在集合中插入它本身作为集合的某个元素, 尤其要小心 equals() 方法和 hashcode() 方法可能就不好使了。
 
 ***
 
 #### ArrayList
 
-基于List接口的可变长数组的实现, 该类和Vector几乎相当, 除了ArrayList是unsynchronized。
+基于List接口的可变长数组的实现, 该类和 Vector 几乎相当, 除了 ArrayList 是 unsynchronized。
 
 其中, size, isEmpty, get, set, iterator 和 listIterator操作的时间复杂度是O(1),
 add操作是均摊常量时间(amortized constant time), 其它操作的时间复杂度是O(n)。
 
-每个ArrayList对象都有capacity属性, 用于表示存放list中元素(可以是null)的数组的容量。
-同时, capacity至少与list.size()一样大。
+每个 ArrayList 对象都有 capacity 属性, 用于表示存放 list 中元素(可以是null)的数组的容量。
+同时, capacity至少与 list.size() 一样大。
 
-由于ArrayList是unsynchronized, 所以需要对list的操作进行封装, 然后对某个对象进行同步控制。
-当然, 也可以使用Collections.synchronizedList()方法对该ArrayList对象进行包装, 做法如下:
+由于 ArrayList 是 unsynchronized, 所以需要对 list 的操作进行封装, 然后对某个对象进行同步控制。
+当然, 也可以使用 Collections.synchronizedList() 方法对该 ArrayList 对象进行包装, 做法如下:
 
 ```
     List list = Collections.synchronizedList(new ArrayList(...));
 ```
  
-另外, iterator()和 listIterator()方法都是fail-fast(快速失败): 在iterator创建之后, 任何对list的结构化修改时(如add(), remove()方法),
-iterator 都会抛出ConcurrentModificationException。因此, 在遇到并发修改时, 迭代器为了避免有风险以及不确定地行为的出现, 都会快速失败。
-注意，迭代器的快速失败行为无法得到保证。一般来说，由于list是unsynchronized, 所以无法避免任何不同步的并发修改,
+另外, iterator()和 listIterator()方法都是 fail-fast(快速失败): 在 iterator 创建之后, 任何对 list 的结构化修改时(如add(), remove()方法),
+iterator 都会抛出 ConcurrentModificationException。因此, 在遇到并发修改时, 迭代器为了避免有风险以及不确定地行为的出现, 都会快速失败。
+注意，迭代器的快速失败行为无法得到保证。一般来说，由于 list 是 unsynchronized, 所以无法避免任何不同步的并发修改,
 而快速失败迭代器只是会尽最大努力抛出 ConcurrentModificationException。
 迭代器的快速失败行为应该仅用于检测 bug。因此，依赖于这种做法是无法给程序正确性提供保证的。
 
@@ -217,7 +215,7 @@ ArrayList常见的方法(增、删、改、查)如下:
 
 ** fail-fast机制 **
 
-迭代器的快速失败机制(fail-fast)是在迭代器初始时获取modCount,并存入expectedModCount变量中。
+迭代器的快速失败机制(fail-fast)是在迭代器初始时获取 modCount,并存入 expectedModCount 变量中。
 然后再迭代器的next(), add(), set() 和 remove()方法前检查 modCount 和 expectedModCount 是否相等(ArrayList表结构的增删操作都会将modCount加1)。
 如果不等, 则抛出 ConcurrentModificationException 异常。
 
