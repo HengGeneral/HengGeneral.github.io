@@ -67,7 +67,7 @@ iterator 都会抛出 ConcurrentModificationException。因此, 在遇到并发�
 
 ArrayList常见的方法(增、删、改、查)如下:
 
-** add()方法 **
+#### ** add()方法 **
 
 ```
     private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
@@ -128,7 +128,7 @@ ArrayList常见的方法(增、删、改、查)如下:
     }
 ```
 
-** contains()方法 **
+#### ** contains()方法 **
 
 ```
     /**
@@ -156,7 +156,7 @@ ArrayList常见的方法(增、删、改、查)如下:
     }
 ```
 
-** remove()方法 **
+#### ** remove()方法 **
 
 ```
     public E remove(int index) {
@@ -201,7 +201,7 @@ ArrayList常见的方法(增、删、改、查)如下:
     }
 ```
 
-** set()方法 **
+#### ** set()方法 **
 
 ```
     public E set(int index, E element) {
@@ -213,7 +213,7 @@ ArrayList常见的方法(增、删、改、查)如下:
     }
 ```    
 
-** fail-fast机制 **
+#### ** fail-fast机制 **
 
 迭代器的快速失败机制(fail-fast)是在迭代器初始时获取 modCount,并存入 expectedModCount 变量中。
 然后再迭代器的next(), add(), set() 和 remove()方法前检查 modCount 和 expectedModCount 是否相等(ArrayList表结构的增删操作都会将modCount加1)。
