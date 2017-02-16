@@ -67,7 +67,7 @@ iterator 都会抛出 ConcurrentModificationException。因此, 在遇到并发�
 
 ArrayList常见的方法(增、删、改、查)如下:
 
-#### ** add()方法 **
+#### add()方法
 
 ```
     private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
@@ -128,7 +128,7 @@ ArrayList常见的方法(增、删、改、查)如下:
     }
 ```
 
-#### ** contains()方法 **
+#### contains()方法
 
 ```
     /**
@@ -139,7 +139,7 @@ ArrayList常见的方法(增、删、改、查)如下:
     }
 
     /**
-     * More formally, returns the lowest index i such that o==null?get(i)==null:o.equals(get(i)),
+     * Formally, returns the lowest index i such that o==null?get(i)==null:o.equals(get(i)),
      * or -1 if there is no such index.
      */
     public int indexOf(Object o) {
@@ -156,7 +156,7 @@ ArrayList常见的方法(增、删、改、查)如下:
     }
 ```
 
-#### ** remove()方法 **
+#### remove()方法
 
 ```
     public E remove(int index) {
@@ -201,7 +201,7 @@ ArrayList常见的方法(增、删、改、查)如下:
     }
 ```
 
-#### ** set()方法 **
+#### set()方法
 
 ```
     public E set(int index, E element) {
@@ -213,7 +213,7 @@ ArrayList常见的方法(增、删、改、查)如下:
     }
 ```    
 
-#### ** fail-fast机制 **
+#### fail-fast机制
 
 迭代器的快速失败机制(fail-fast)是在迭代器初始时获取 modCount,并存入 expectedModCount 变量中。
 然后再迭代器的next(), add(), set() 和 remove()方法前检查 modCount 和 expectedModCount 是否相等(ArrayList表结构的增删操作都会将modCount加1)。
@@ -240,6 +240,234 @@ ArrayList常见的方法(增、删、改、查)如下:
 ```        
 
 #### LinkedList
+
+LinkedList就是所说的双向链表。和 ArrayList 一样, LinkedList也是 unsynchronized。
+如果多个线程并发地对链表进行操作, 并且至少一个线程可以操作成功, 它必须在外部进行同步: 对新对象同步或者使用 Collections.synchronizedList()方法进行包装。
+同时, iterator也支持 fail-fast 机制。
+
+常用的方法如下:
+
+#### add()方法
+
+```
+    transient int size = 0;
+
+    transient Node<E> first;
+
+    transient Node<E> last;
+    
+    private static class Node<E> {
+        E item;
+        Node<E> next;
+        Node<E> prev;
+
+        Node(Node<E> prev, E element, Node<E> next) {
+            this.item = element;
+            this.next = next;
+            this.prev = prev;
+        }
+    }
+    
+    public boolean add(E e) {
+        linkLast(e);
+        return true;
+    }
+    
+    public void addFirst(E e) {
+        linkFirst(e);
+    }
+
+    public void addLast(E e) {
+        linkLast(e);
+    }
+    
+    private void linkFirst(E e) {
+        final Node<E> f = first;
+        final Node<E> newNode = new Node<>(null, e, f);
+        first = newNode;
+        if (f == null)
+            last = newNode;
+        else
+            f.prev = newNode;
+        size++;
+        modCount++;
+    }
+    
+    void linkLast(E e) {
+        final Node<E> l = last;
+        final Node<E> newNode = new Node<>(l, e, null);
+        last = newNode;
+        if (l == null)
+            first = newNode;
+        else
+            l.next = newNode;
+        size++;
+        modCount++;
+    }
+
+    /**
+     * Inserts element e before non-null Node succ.
+     */
+    void linkBefore(E e, Node<E> succ) {
+        // assert succ != null;
+        final Node<E> pred = succ.prev;
+        final Node<E> newNode = new Node<>(pred, e, succ);
+        succ.prev = newNode;
+        if (pred == null)
+            first = newNode;
+        else
+            pred.next = newNode;
+        size++;
+        modCount++;
+    }
+```
+
+#### remove()方法
+
+```
+    private E unlinkFirst(Node<E> f) {
+        // assert f == first && f != null;
+        final E element = f.item;
+        final Node<E> next = f.next;
+        f.item = null;
+        f.next = null; // help GC
+        first = next;
+        if (next == null)
+            last = null;
+        else
+            next.prev = null;
+        size--;
+        modCount++;
+        return element;
+    }
+
+    private E unlinkLast(Node<E> l) {
+        // assert l == last && l != null;
+        final E element = l.item;
+        final Node<E> prev = l.prev;
+        l.item = null;
+        l.prev = null; // help GC
+        last = prev;
+        if (prev == null)
+            first = null;
+        else
+            prev.next = null;
+        size--;
+        modCount++;
+        return element;
+    }
+
+    E unlink(Node<E> x) {
+        // assert x != null;
+        final E element = x.item;
+        final Node<E> next = x.next;
+        final Node<E> prev = x.prev;
+
+        if (prev == null) {
+            first = next;
+        } else {
+            prev.next = next;
+            x.prev = null;
+        }
+
+        if (next == null) {
+            last = prev;
+        } else {
+            next.prev = prev;
+            x.next = null;
+        }
+
+        x.item = null;
+        size--;
+        modCount++;
+        return element;
+    }
+    
+    public boolean remove(Object o) {
+        if (o == null) {
+            for (Node<E> x = first; x != null; x = x.next) {
+                if (x.item == null) {
+                    unlink(x);
+                    return true;
+                }
+            }
+        } else {
+            for (Node<E> x = first; x != null; x = x.next) {
+                if (o.equals(x.item)) {
+                    unlink(x);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+```
+
+#### contains()方法
+
+```
+    public boolean contains(Object o) {
+        return indexOf(o) != -1;
+    }
+
+    public int indexOf(Object o) {
+        int index = 0;
+        if (o == null) {
+            for (Node<E> x = first; x != null; x = x.next) {
+                if (x.item == null)
+                    return index;
+                index++;
+            }
+        } else {
+            for (Node<E> x = first; x != null; x = x.next) {
+                if (o.equals(x.item))
+                    return index;
+                index++;
+            }
+        }
+        return -1;
+    }
+```
+
+#### get()方法
+
+```
+    public E getFirst() {
+        final Node<E> f = first;
+        if (f == null)
+            throw new NoSuchElementException();
+        return f.item;
+    }
+    
+    public E getLast() {
+        final Node<E> l = last;
+        if (l == null)
+            throw new NoSuchElementException();
+        return l.item;
+    }
+    
+    public E get(int index) {
+        checkElementIndex(index);
+        return node(index).item;
+    }
+
+    Node<E> node(int index) {
+        // assert isElementIndex(index);
+
+        //如果靠近前半部分, 则从头开始检索; 否则, 从尾开始检索;
+        if (index < (size >> 1)) {
+            Node<E> x = first;
+            for (int i = 0; i < index; i++)
+                x = x.next;
+            return x;
+        } else {
+            Node<E> x = last;
+            for (int i = size - 1; i > index; i--)
+                x = x.prev;
+            return x;
+        }
+    }
+```
 
 #### Vector
 
