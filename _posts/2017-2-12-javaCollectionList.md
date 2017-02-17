@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Java 集合框架
+title: Java 集合框架之List
 tags:  [JAVA]
 categories: [JAVA]
 author: liheng
@@ -241,7 +241,7 @@ ArrayList常见的方法(增、删、改、查)如下:
 
 #### LinkedList
 
-LinkedList就是所说的双向链表。和 ArrayList 一样, LinkedList也是 unsynchronized。
+LinkedList就是所说的双向链表(双向链表的顺序实现是ArrayDeque)。和 ArrayList 一样, LinkedList也是 unsynchronized。
 如果多个线程并发地对链表进行操作, 并且至少一个线程可以操作成功, 它必须在外部进行同步: 对新对象同步或者使用 Collections.synchronizedList()方法进行包装。
 同时, iterator也支持 fail-fast 机制。
 
@@ -481,10 +481,415 @@ iterator 都会抛出 ConcurrentModificationException。因此, 在遇到并发�
 T1下次next()方法会再次返回E元素, fail-fast就是为了避免这种错误。
 另外, 迭代器下面的方法并不是完全同步的, 变量也不是volatile, 若有并发地操作, 还是会出现不一致的情况, 所以fail-fast也只是尽最大努力抛出 ConcurrentModificationException。
 
+#### add()方法
+```
+    public synchronized void addElement(E obj) {
+        modCount++;
+        ensureCapacityHelper(elementCount + 1);
+        elementData[elementCount++] = obj;
+    }
+    
+    private void ensureCapacityHelper(int minCapacity) {
+        // overflow-conscious code
+        if (minCapacity - elementData.length > 0)
+            grow(minCapacity);
+    }
+       
+    public synchronized void insertElementAt(E obj, int index) {
+        modCount++;
+        if (index > elementCount) {
+            throw new ArrayIndexOutOfBoundsException(index
+                                                     + " > " + elementCount);
+        }
+        ensureCapacityHelper(elementCount + 1);
+        System.arraycopy(elementData, index, elementData, index + 1, elementCount - index);
+        elementData[index] = obj;
+        elementCount++;
+    }
+           
+    private void grow(int minCapacity) {
+        // overflow-conscious code
+        int oldCapacity = elementData.length;
+        int newCapacity = oldCapacity + ((capacityIncrement > 0) ?
+                                         capacityIncrement : oldCapacity);
+        if (newCapacity - minCapacity < 0)
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            newCapacity = hugeCapacity(minCapacity);
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }           
+```
 
-### 其它
+#### remove()方法
+```
+    protected int elementCount;
+    
+    public synchronized void removeElementAt(int index) {
+        modCount++;
+        if (index >= elementCount) {
+            throw new ArrayIndexOutOfBoundsException(index + " >= " +
+                                                     elementCount);
+        }
+        else if (index < 0) {
+            throw new ArrayIndexOutOfBoundsException(index);
+        }
+        int j = elementCount - index - 1;
+        if (j > 0) {
+            System.arraycopy(elementData, index + 1, elementData, index, j);
+        }
+        elementCount--;
+        elementData[elementCount] = null; /* to let gc do its work */
+    }
+    
+    public synchronized boolean removeElement(Object obj) {
+        modCount++;
+        int i = indexOf(obj);
+        if (i >= 0) {
+            removeElementAt(i);
+            return true;
+        }
+        return false;
+    }
+```
+
+#### get()方法
+
+```
+    public synchronized int lastIndexOf(Object o, int index) {
+        if (index >= elementCount)
+            throw new IndexOutOfBoundsException(index + " >= "+ elementCount);
+
+        if (o == null) {
+            for (int i = index; i >= 0; i--)
+                if (elementData[i]==null)
+                    return i;
+        } else {
+            for (int i = index; i >= 0; i--)
+                if (o.equals(elementData[i]))
+                    return i;
+        }
+        return -1;
+    }
+
+    public synchronized E elementAt(int index) {
+        if (index >= elementCount) {
+            throw new ArrayIndexOutOfBoundsException(index + " >= " + elementCount);
+        }
+
+        return elementData(index);
+    }
+
+    public synchronized E firstElement() {
+        if (elementCount == 0) {
+            throw new NoSuchElementException();
+        }
+        return elementData(0);
+    }
+
+    public synchronized E lastElement() {
+        if (elementCount == 0) {
+            throw new NoSuchElementException();
+        }
+        return elementData(elementCount - 1);
+    }
+
+    //并不是线程安全的
+    public Enumeration<E> elements() {
+        return new Enumeration<E>() {
+            int count = 0;
+
+            public boolean hasMoreElements() {
+                return count < elementCount;
+            }
+
+            public E nextElement() {
+                synchronized (Vector.this) {
+                    if (count < elementCount) {
+                        return elementData(count++);
+                    }
+                }
+                throw new NoSuchElementException("Vector Enumeration");
+            }
+        };
+    }
+```
+
+#### set()方法
+```
+    public synchronized void setElementAt(E obj, int index) {
+        if (index >= elementCount) {
+            throw new ArrayIndexOutOfBoundsException(index + " >= " +
+                                                     elementCount);
+        }
+        elementData[index] = obj;
+    }
+
+    public synchronized E set(int index, E element) {
+        if (index >= elementCount)
+            throw new ArrayIndexOutOfBoundsException(index);
+
+        E oldValue = elementData(index);
+        elementData[index] = element;
+        return oldValue;
+    }
+```
+
+### Stack
+
+stack(栈), 后进先出的数据结构, 继承了Vector类并扩展了5个方法, push、pop、peek、empty和search方法, 代码如下:
+
+```
+    public E push(E item) {
+        addElement(item); //参见Vector类addElement()方法
+
+        return item;
+    }
+    
+    public synchronized E pop() {
+        E       obj;
+        int     len = size();
+
+        obj = peek();
+        removeElementAt(len - 1); //参见Vector类removeElementAt()方法
+
+        return obj;
+    }
+  
+    public synchronized E peek() {
+        int     len = size();
+
+        if (len == 0)
+            throw new EmptyStackException();
+        return elementAt(len - 1); //参见Vector类elementAt()方法
+    }
+        
+    public boolean empty() {
+        return size() == 0;
+    }
+            
+    public synchronized int search(Object o) {
+        int i = lastIndexOf(o); //参见Vector类lastIndexOf()方法
+
+        if (i >= 0) {
+            return size() - i;
+        }
+        return -1;
+    }            
+```    
+
+### PriorityQueue
+
+优先级队列, 也是数据结构中的小顶堆。队列中的元素存放在数组中, 按照自然序或者自定义的比较器来存放的, 若没有提供自定义的比较器时, non-comparable
+的对象时不允许插入。和ArrayList, LinkedList不一样的是, 优先级队列并不允许null元素。
+
+#### add()方法
+
+```
+    public boolean add(E e) {
+        return offer(e);
+    }
+
+    /**
+     * Inserts the specified element into this priority queue.
+     *
+     * @return {@code true} (as specified by {@link Queue#offer})
+     * @throws ClassCastException if the specified element cannot be
+     *         compared with elements currently in this priority queue
+     *         according to the priority queue's ordering
+     * @throws NullPointerException if the specified element is null
+     */
+    public boolean offer(E e) {
+        if (e == null)
+            throw new NullPointerException();
+        modCount++;
+        int i = size;
+        if (i >= queue.length)
+            grow(i + 1);
+        size = i + 1;
+        if (i == 0)
+            queue[0] = e;
+        else
+            siftUp(i, e);
+        return true;
+    }
+    
+    private void grow(int minCapacity) {
+        int oldCapacity = queue.length;
+        // Double size if small; else grow by 50%
+        int newCapacity = oldCapacity + ((oldCapacity < 64) ?
+                                         (oldCapacity + 2) :
+                                         (oldCapacity >> 1));
+        // overflow-conscious code
+        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            newCapacity = hugeCapacity(minCapacity);
+        queue = Arrays.copyOf(queue, newCapacity);
+    }
+
+    private static int hugeCapacity(int minCapacity) {
+        if (minCapacity < 0) // overflow
+            throw new OutOfMemoryError();
+        return (minCapacity > MAX_ARRAY_SIZE) ?
+            Integer.MAX_VALUE :
+            MAX_ARRAY_SIZE;
+    }
+    
+    private void siftUp(int k, E x) {
+        if (comparator != null)
+            siftUpUsingComparator(k, x);
+        else
+            siftUpComparable(k, x);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void siftUpComparable(int k, E x) {
+        Comparable<? super E> key = (Comparable<? super E>) x;
+        while (k > 0) {
+            int parent = (k - 1) >>> 1;
+            Object e = queue[parent];
+            if (key.compareTo((E) e) >= 0)
+                break;
+            queue[k] = e;
+            k = parent;
+        }
+        queue[k] = key;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void siftUpUsingComparator(int k, E x) {
+        while (k > 0) {
+            int parent = (k - 1) >>> 1;
+            Object e = queue[parent];
+            if (comparator.compare(x, (E) e) >= 0)
+                break;
+            queue[k] = e;
+            k = parent;
+        }
+        queue[k] = x;
+    }
+    
+    public boolean offer(E e) {
+        if (e == null)
+            throw new NullPointerException();
+        modCount++;
+        int i = size;
+        if (i >= queue.length)
+            grow(i + 1);
+        size = i + 1;
+        if (i == 0)
+            queue[0] = e;
+        else
+            siftUp(i, e);
+        return true;
+    }    
+```
+
+#### query()方法
+
+```
+    public E peek() {
+        return (size == 0) ? null : (E) queue[0];
+    }
+
+    private int indexOf(Object o) {
+        if (o != null) {
+            for (int i = 0; i < size; i++)
+                if (o.equals(queue[i]))
+                    return i;
+        }
+        return -1;
+    }
+    
+    
+```
+
+#### remove()方法
+```
+    public boolean remove(Object o) {
+        int i = indexOf(o);
+        if (i == -1)
+            return false;
+        else {
+            removeAt(i);
+            return true;
+        }
+    }
+
+    boolean removeEq(Object o) {
+        for (int i = 0; i < size; i++) {
+            if (o == queue[i]) {
+                removeAt(i);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private E removeAt(int i) {
+        // assert i >= 0 && i < size;
+        modCount++;
+        int s = --size;
+        if (s == i) // removed last element
+            queue[i] = null;
+        else {
+            E moved = (E) queue[s];
+            queue[s] = null;
+            siftDown(i, moved);
+            if (queue[i] == moved) {
+                siftUp(i, moved);
+                if (queue[i] != moved)
+                    return moved;
+            }
+        }
+        return null;
+    }
+        
+    private void siftDown(int k, E x) {
+        if (comparator != null)
+            siftDownUsingComparator(k, x);
+        else
+            siftDownComparable(k, x);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void siftDownComparable(int k, E x) {
+        Comparable<? super E> key = (Comparable<? super E>)x;
+        int half = size >>> 1;        // loop while a non-leaf
+        while (k < half) {
+            int child = (k << 1) + 1; // assume left child is least
+            Object c = queue[child];
+            int right = child + 1;
+            if (right < size &&
+                ((Comparable<? super E>) c).compareTo((E) queue[right]) > 0)
+                c = queue[child = right];
+            if (key.compareTo((E) c) <= 0)
+                break;
+            queue[k] = c;
+            k = child;
+        }
+        queue[k] = key;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void siftDownUsingComparator(int k, E x) {
+        int half = size >>> 1;
+        while (k < half) {
+            int child = (k << 1) + 1;
+            Object c = queue[child];
+            int right = child + 1;
+            if (right < size &&
+                comparator.compare((E) c, (E) queue[right]) > 0)
+                c = queue[child = right];
+            if (comparator.compare(x, (E) c) <= 0)
+                break;
+            queue[k] = c;
+            k = child;
+        }
+        queue[k] = x;
+    }        
+```
 
 ### 参考文献:
 1. https://docs.oracle.com/javase/8/docs/technotes/guides/collections/overview.html
 2. http://stackoverflow.com/questions/200384/constant-amortized-time/
 3. http://stackoverflow.com/questions/4479554/why-vector-methods-iterator-and-listiterator-are-fail-fast
+4. https://www.ibm.com/developerworks/cn/java/j-jtp09263/
