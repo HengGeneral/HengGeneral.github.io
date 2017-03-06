@@ -518,8 +518,7 @@ HashMap也用hash-based table 来存储key-value的。和Hashtable不同的是, 
 
 #### TreeMap
 
-TreeMap是基于红黑树结构实现的一种Map实现, 它提供了许多时间复杂度为log(n)的方法, 如
-containsKey(), get(), put(), remove()。
+TreeMap是基于红黑树结构实现的一种Map实现, 它提供了许多时间复杂度为log(n)的方法, 如containsKey(), get(), put(), remove()。
 
 同时, TreeMap并不是synchronized, 因此当多个线程并发地访问该map并至少有一个线程涉及到修改map的结构时,
 需要在外部进行并发控制 或者 使用 Collections.synchronizedSortedMap() 进行包装, 如下:
