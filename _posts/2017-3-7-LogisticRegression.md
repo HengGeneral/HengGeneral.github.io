@@ -10,11 +10,11 @@ excerpt: "Machine Learning"
 
 #### 为什么上述问题线性回归无法解决, 需要引入逻辑回归?
 
- ![Why-We-Need-LR](/images/ml/lr/WhyNeedLogisticRegression.png)
+ ![Why-We-Need-LR](/images/ml/logisticRegression/WhyNeedLogisticRegression.png)
  
 #### hypothesis
 
- ![ LR-Hypothesis-Model](/images/ml/lr/LR-Hypothesis-Model.png)
+ ![ LR-Hypothesis-Model](/images/ml/logisticRegression/LR-Hypothesis-Model.png)
 
 #### 决策边界（Decision Boundary)
 
