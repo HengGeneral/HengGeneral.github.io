@@ -2,7 +2,7 @@
 layout: post
 title: hystrix总结
 tags:  [JAVA]
-categories: [Java]
+categories: [JAVA]
 author: liheng
 excerpt: "hystrix"
 ---
