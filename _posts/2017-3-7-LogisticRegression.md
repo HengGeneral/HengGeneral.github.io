@@ -14,16 +14,33 @@ excerpt: "Machine Learning"
  
 #### hypothesis
 
- ![ LR-Hypothesis-Model](/images/ml/logisticRegression/LR-Hypothesis-Model.png)
+ ![LR-Hypothesis-Model](/images/ml/logisticRegression/LR-Hypothesis-Model.png)
 
 #### 决策边界（Decision Boundary)
 
 The decision boundary is the line that separates the area where y = 0 and where y = 1. It is created by our hypothesis function.
 
-#### 
+#### Cost Function
 
+如果和线性回归一样使用如下作为cost function, 得到的函数并不是convex, 如下图所示:
+ ![LinearR-Cost-LogisticR](/images/ml/logisticRegression/lineraRegression-costFunction-Logistic.png)
+
+因此, 又构造了一个新的cost function, 如下:
+ ![Logistic-CostFunction](/images/ml/logisticRegression/Logistic-CostFunction.png)
+
+#### multi-class Regression
+ ![multiclass-lr](/images/ml/logisticRegression/multiclass-lr.png)
+
+#### 过拟合(over-fitting)
+![over-fitting](/images/ml/logisticRegression/over-fitting.png)
+
+如何解决该问题呢?
+![solve-over-fitting](/images/ml/logisticRegression/solve-over-fitting.png)
 
 #### 正则化(regularization)
+
+![regulation](/images/ml/logisticRegression/regulation.png)
+
 
 
 
