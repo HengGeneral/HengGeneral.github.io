@@ -37,12 +37,15 @@ The decision boundary is the line that separates the area where y = 0 and where 
 如何解决该问题呢?
 ![solve-over-fitting](/images/ml/logisticRegression/solve-over-fitting.png)
 
-#### 正则化(regularization)
+#### regularization
 
 ![regulation](/images/ml/logisticRegression/regulation.png)
 
+![logisticRegressionCost](/images/ml/logisticRegression/logisticRegressionCost.png)
 
+![linearNormCost](/images/ml/logisticRegression/linearNormCost.png)
 
+![logistic-regression-regulation-cost](/images/ml/logisticRegression/logistic-regression-regulation-cost.png)
 
 
 ## 参考文献:
