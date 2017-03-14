@@ -2,7 +2,7 @@
 layout: post
 title: HBase
 tags:  [HBase]
-categories: [NoSQL]
+categories: [SQL/NoSQL]
 author: liheng
 excerpt: "hbase"
 ---
