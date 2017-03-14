@@ -2,7 +2,7 @@
 layout: post
 title: HBase数据模型
 tags:  [HBase]
-categories: [SQL/NoSQL]
+categories: [NoSQL]
 author: liheng
 excerpt: "hbase data model"
 ---
