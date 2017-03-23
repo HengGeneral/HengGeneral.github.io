@@ -44,9 +44,34 @@ excerpt: "Machine Learning"
 
 ### Parameter Learning
 
+#### 梯度下降(gradient descent)
+
+梯度下降，为的是将J(θ)描绘出之后，让参数沿着梯度下降的方向走，并迭代地不断减小J(θ)至稳态。效果图如下:
+
+![gradient-descent-effect](/images/ml/linearRegression/gradient-effect.png)
+
+梯度下降的算法如下:
+
+![gradient-descent-function](/images/ml/linearRegression/gradient-algo.png)
+
+可以通过调整参数α来调整梯度下降的速率, 最终没有收敛以及收敛速度过慢都不好。
+
+![gradient-step](/images/ml/linearRegression/gradient-step.png)
+
+#### 梯度下降在线性回归中的运用
+
+为了计算J(θ)在θ中的偏导数, 我们有,
+
+![gradient-refer-linear-regression](/images/ml/linearRegression/gradient-refer-linear-regression.png)
+
+最终, 我们就得到如下的梯度计算方法:
+
+![gradient-linear-regression](/images/ml/linearRegression/gradient-linear-regression.png)
+
 
 [whatIsLearning]: https://www.zhihu.com/question/23194489/answer/25028661
 
 ## 参考文献:
 
-1. 
+1. https://www.coursera.org/learn/machine-learning/home/week/1
+2. http://blog.csdn.net/abcjennifer/article/details/7691571
