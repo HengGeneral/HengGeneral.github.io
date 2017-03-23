@@ -1,17 +1,13 @@
 ---
 layout: post
-title: HBase
+title: HBase Security
 tags:  [HBase]
 categories: [NoSQL]
 author: liheng
-excerpt: "hbase"
+excerpt: "hbase Security"
 ---
 
-配置
-
-HBase shell
-
-数据模型
+###
 
 
 
