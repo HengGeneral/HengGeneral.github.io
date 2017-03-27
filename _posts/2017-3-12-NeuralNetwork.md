@@ -89,7 +89,7 @@ excerpt: "Machine Learning"
 
 ![nn-process-1](/images/ml/neuralNetwork/nn-process.png)
 
-![nn-process-1](/images/ml/neuralNetwork/nn-process-2.png)
+![nn-process-2](/images/ml/neuralNetwork/nn-process-2.png)
 
 [bp-reference]: https://my.oschina.net/findbill/blog/529001
 
