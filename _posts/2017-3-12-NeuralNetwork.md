@@ -67,7 +67,7 @@ excerpt: "Machine Learning"
 
 最后判断两种计算方式的值是否很相似:
 
-![gradient-checking-process](/images/ml/neuralNetwork/gradient-checking-process.png)
+![gradient-checking-equal](/images/ml/neuralNetwork/gradient-checking-equal.png)
 
 ### Random Initialization
         
