@@ -48,6 +48,34 @@ execute() 方法是同步调用，内部实现上会调用queue().get()方法。
 ### 请求缓存
 如果request caching特性被启用，并且请求时响应缓存命中，则会以Observable对象的形式立即返回响应。
 
+在 HystrixCommand 和 HystrixObservableCommand 的实现中，你可以定义一个缓存的 Key，
+这个 Key 用于在同一个请求上下文（全局或者用户级）中标识缓存的请求结果，当然，该缓存是线程安全的。
+
+下例展示了在一个完整 HTTP 请求周期内，两个线程执行命令的流程：
+![hystrix缓存](/images/hystrix/hystrix-cache.png)
+
+请求缓存有如下好处：
+*   不同请求路径上针对同一个依赖服务进行的重复请求（有同一个缓存 Key），不会真实请求多次
+这个特性在企业级系统中非常有用，在这些系统中，开发者往往开发的只是系统功能的一部分。（注：这样，开发者彼此隔离，不太可能使用同样的方法或者策略去请求同一个依赖服务提供的资源）
+
+    例如，请求一个用户的 Account 的逻辑如下所示，这个逻辑往往在系统不同地方被用到：
+    ```
+        Account account = new UserGetAccount(accountId).execute();
+    
+        //or
+    
+        Observable<Account> accountObservable = new UserGetAccount(accountId).observe();
+    ```
+    Hystrix 的 RequestCache 只会在内部执行 run() 方法一次，
+    上面两个线程在执行 HystrixCommand 命令时，会得到相同的结果，即使这两个命令是两个不同的实例。
+
+*   数据获取具有一致性
+    因为缓存的存在，除了第一次请求需要真正访问依赖服务以外，后续请求全部从缓存中获取，可以保证在同一个用户请求内，不会出现依赖服务返回不同的回应的情况。
+
+*   避免不必要的线程执行
+    在 construct() 或 run() 方法执行之前，会先从请求缓存中获取数据，因此，Hystrix 能利用这个特性避免不必要的线程执行，减小系统开销。
+
+    若 Hystrix 没有实现请求缓存，那么 HystrixCommand 和 HystrixObservableCommand 的实现者需要自己在 construct() 或 run() 方法中实现缓存，这种方式无法避免不必要的线程执行开销。
 
 ### 熔断器
 
@@ -75,6 +103,26 @@ execute() 方法是同步调用，内部实现上会调用queue().get()方法。
 
 Hystrix 通过使用舱壁模式来隔离依赖服务。
 （注：将船的底部划分成一个个的舱室，这样一个舱室进水不会导致整艘船沉没。将系统所有依赖服务隔离起来，一个依赖延迟升高或者失败，不会导致整个系统失败）
+![hystrix舱壁](/images/hystrix/hystrix-bulkhead.png)
+
+通过将对依赖服务的访问执行放到单独的线程，将其与调用线程（例如 Tomcat 线程池中的线程）隔离开来，
+调用线程就能空出来去做其他的工作而不至于被依赖服务的访问阻塞过长时间。
+
+Hystrix 使用独立的，每个依赖服务对应一个线程池的方式，来隔离这些依赖服务，这样，某个依赖服务的高延迟只会拖慢这个依赖服务对应的线程池。
+![hystrix线程池](/images/hystrix/hystrix-threadpool.png)
+
+当然，也可以不使用线程池来使你的系统免受依赖服务失效的影响，
+这需要你小心的设置超时时间和重试配置，并保证这些配置能正确正常的运作，以及能快速返回错误。
+
+Netflix 在设计 Hystrix 时，使用线程/线程池来实现隔离，原因如下：
+*   多数系统同时运行了（有时甚至多达数百个）不同的后端服务，这些服务由不同开发组开发；
+*   第三方依赖经常会发生变动；
+*   第三方依赖对于使用者来说，相当于黑盒，其实现细节，网络访问方式，默认配置等等均对使用者透明；
+*   第三方依赖可能也会有失效或者高延迟，而不仅仅是在网络访问时；
+![hystrix超时](/images/hystrix/hystrix-timeout.png)
+
+当然，线程池也有弊端，主要是会增加系统 CPU 的负载，每个命令的执行，都包含了 CPU 任务的排队，调度，上下文切换。
+Netflix 在设计 Hystrix 时，认为相对于其带来的好处，其带来的负载的一点点升高对系统的影响是微乎其微的。
 
 
 ### HystrixObservableCommand.construct() or HystrixCommand.run()
@@ -110,12 +158,6 @@ fallback逻辑包含了通用的响应信息，这些响应从本地内存中或
 *   observe() —— 
 *   toObservable() —— 
 
-
-
-
-  
-
-### 成功返回
 
 ## 参考文献:
 1. https://github.com/Netflix/Hystrix/wiki/How-it-Works
