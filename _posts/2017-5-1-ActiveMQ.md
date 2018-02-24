@@ -1,6 +1,6 @@
 ---
 layout: post
-title: JMS-ActiveMQ总结
+title: ActiveMQ基本介绍
 tags:  [ActiveMQ]
 categories: [中间件]
 author: liheng
@@ -29,6 +29,7 @@ JMS规范中定义了两种消息传递模型：点对点消息传递模型（PT
 这两种模式对应于ActiveMQ则是，在点对点消息中，目的地被称为队列（queue）；在发布/订阅中，目的地被成为主题（topic）。
 
 ![amqPtp](/images/activemq/amq_ptp.png)
+
 如上图所示，该消息传递模型使用的是点对点消息传递模型。
 图中左边是消息生产者，右边是消息消费者，生产者发送消息到broker的queue中，broker会把这条消息分发给注册在这个队列上的某一个消费者，同一条消息只会被一个消费者所消费。
 代码如下：
@@ -37,6 +38,7 @@ JMS规范中定义了两种消息传递模型：点对点消息传递模型（PT
 ```
 
 ![amqPubSub](/images/activemq/amq_pubsub.png)
+
 如上图所示，该消息传递模型使用的是发布/订阅消息传递模型。图中左边是消息生产者，右边是消息消费者，生产者发送消息到broker的topic中，
 broker会把这条消息转发给这个topic上的所有消费者，同一条消息会被所有消费者消费。代码如下：
 ```
@@ -103,6 +105,11 @@ JMS消息体有以下五种类型：
 *   StreamMessage：包含了一个Java primitive流对象，这个流可以顺序读取和填充。
 *   ObjectMessage：包含了一个可序列化的Java对象。
 
+#### 对象间的关系
+上面提到的这些JMS元素之间的关系如下图所示：
+
+![amqInteract](/images/activemq/amq_interact.png)
+
 ### AMQ基本介绍
 
 ### Activemq Console
@@ -122,8 +129,7 @@ Prefetch: 1000代表的是消费者设置的Prefetch Size,消费者使用的默�
 
 慢消费造成的直接影响是，当消费者未ACK的消息一直持续不减少，ActiveMQ Broker会认为该消费者消费过慢，会不再推送新的消息给该消费者.
 
-
 消费者一直持有未ACK的消息，只有断开该消费者，该消费者未ACK的消息才会被ActiveMQ Broker重新推送给其他消费者（这就是为什么队列堵了一些老消息，机器重启能解决的原因）。
 
 ## 参考文献:
-
+1. <<ActiveMQ in Action>>
