@@ -110,6 +110,152 @@ JMS消息体有以下五种类型：
 
 ![amqInteract](/images/activemq/amq_interact.png)
 
+### JMS高效使用
+#### PooledConnectionFactory
+该链接工厂可以在Connections, sessions and producers使用之后会缓存下来，之后这些资源就可以复用(它们的创建会消耗大量系统资源)。
+```
+    @Override
+    public synchronized Connection createConnection(String userName, String password) throws JMSException {
+        if (stopped.get()) {
+            LOG.debug("PooledConnectionFactory is stopped, skip create new connection.");
+            return null;
+        }
+
+        ConnectionPool connection = null;
+        // userName和passpord都传的为null
+        ConnectionKey key = new ConnectionKey(userName, password);
+
+        // This will either return an existing non-expired ConnectionPool or it
+        // will create a new one to meet the demand.
+        if (getConnectionsPool().getNumIdle(key) < getMaxConnections()) {
+            try {
+                connectionsPool.addObject(key);
+                connection = mostRecentlyCreated.getAndSet(null);
+                connection.incrementReferenceCount();
+            } catch (Exception e) {
+                throw createJmsException("Error while attempting to add new Connection to the pool", e);
+            }
+        } else {
+            try {
+                // We can race against other threads returning the connection when there is an
+                // expiration or idle timeout.  We keep pulling out ConnectionPool instances until
+                // we win and get a non-closed instance and then increment the reference count
+                // under lock to prevent another thread from triggering an expiration check and
+                // pulling the rug out from under us.
+                while (connection == null) {
+                    connection = connectionsPool.borrowObject(key);
+                    synchronized (connection) {
+                        if (connection.getConnection() != null) {
+                            connection.incrementReferenceCount();
+                            break;
+                        }
+
+                        // Return the bad one to the pool and let if get destroyed as normal.
+                        connectionsPool.returnObject(key, connection);
+                        connection = null;
+                    }
+                }
+            } catch (Exception e) {
+                throw createJmsException("Error while attempting to retrieve a connection from the pool", e);
+            }
+
+            try {
+                connectionsPool.returnObject(key, connection);
+            } catch (Exception e) {
+                throw createJmsException("Error when returning connection to the pool", e);
+            }
+        }
+
+        return newPooledConnection(connection);
+    }
+```
+
+从上面的代码可以看出，创建的connection数量的限制会受限于DEFAULT_MAX_IDLE_PER_KEY(默认是8)。
+
+需要注意的是，PooledConnectionFactory并不会缓存consumers。原因是，consumer会批量的获取消息，
+接收消息的多少可以根据prefetch的大小设置，因此在大量消息发送到消费者时，消费者使用类似统一获取、统一消费的方式处理，“池”没有存在的价值。
+
+#### CachingConnectionFactory
+CachingConnectionFactory继承了SingleConnectionFactory，并在所有的createConnection()调用中返回同一个connection对象。代码如下：
+```
+    //SingleConnectionFactory.java
+    public Connection createConnection() throws JMSException {
+            Object var1 = this.connectionMonitor;
+            synchronized(this.connectionMonitor) {
+                if(this.connection == null) {
+                    this.initConnection();
+                }
+    
+                return this.connection;
+            }
+    }
+    
+    public void initConnection() throws JMSException {
+            if(this.getTargetConnectionFactory() == null) {
+                throw new java.lang.IllegalStateException("\'targetConnectionFactory\' is required for lazily initializing a Connection");
+            } else {
+                Object var1 = this.connectionMonitor;
+                synchronized(this.connectionMonitor) {
+                    if(this.target != null) {
+                        this.closeConnection(this.target);
+                    }
+    
+                    this.target = this.doCreateConnection();
+                    this.prepareConnection(this.target);
+                    if(this.logger.isInfoEnabled()) {
+                        this.logger.info("Established shared JMS Connection: " + this.target);
+                    }
+    
+                    this.connection = this.getSharedConnectionProxy(this.target);
+                }
+            }
+    }
+    
+    //ActiveMQConnectionFactory.java
+    protected ActiveMQConnection createActiveMQConnection(String userName, String password) throws JMSException {
+            if(this.brokerURL == null) {
+                throw new ConfigurationException("brokerURL not set.");
+            } else {
+                ActiveMQConnection connection = null;
+    
+                try {
+                    Transport e = this.createTransport();
+                    connection = this.createActiveMQConnection(e, this.factoryStats);
+                    connection.setUserName(userName);
+                    connection.setPassword(password);
+                    this.configureConnection(connection);
+                    e.start();
+                    if(this.clientID != null) {
+                        connection.setDefaultClientID(this.clientID);
+                    }
+    
+                    return connection;
+                } catch (JMSException var8) {
+                    try {
+                        connection.close();
+                    } catch (Throwable var7) {
+                        ;
+                    }
+    
+                    throw var8;
+                } catch (Exception var9) {
+                    try {
+                        connection.close();
+                    } catch (Throwable var6) {
+                        ;
+                    }
+    
+                    throw JMSExceptionSupport.create("Could not connect to broker URL: " + this.brokerURL + ". Reason: " + var9, var9);
+                }
+            }
+        }
+```
+
+我们在生产环境遇到一个问题，生产环境中与AMQ Broker连接数过多造成部分生产者连接不上，同时又不停地连接再断开问题。
+原因则是，最开始创建一个生产者就创建一个连接然后关闭。之前就发现这个问题会影响性能，但消息量并不大，所以就没有管。
+之后使用了PooledConnectionFactory，情况有所好转但是仍然会有连接不上且不停地连接再断开的问题，后来使用了CachingConnectionFactory
+就彻底地解决了问题，最终的结果是每台机器上对该broker只有一个连接（命令是：netstat -nt | grep 61616）。
+
 ### AMQ基本介绍
 
 ### Activemq Console
@@ -132,4 +278,4 @@ Prefetch: 1000代表的是消费者设置的Prefetch Size,消费者使用的默�
 消费者一直持有未ACK的消息，只有断开该消费者，该消费者未ACK的消息才会被ActiveMQ Broker重新推送给其他消费者（这就是为什么队列堵了一些老消息，机器重启能解决的原因）。
 
 ## 参考文献:
-1. <<ActiveMQ in Action>>
+1. ActiveMQ in Action.pdf
