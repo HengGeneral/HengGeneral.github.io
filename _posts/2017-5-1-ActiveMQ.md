@@ -322,11 +322,308 @@ JMS client使用MessageProducer类来向一个目的地址（destination）发�
     MessageConsumer consumer = session.createConsumer(destination);
 ```
 
+而使用session创建consumer的源码如下：
+```
+    // ActiveMQMessageConsumer.java
+    public ActiveMQMessageConsumer(ActiveMQSession session, ConsumerId consumerId, ActiveMQDestination dest,
+            String name, String selector, int prefetch,
+            int maximumPendingMessageCount, boolean noLocal, boolean browser,
+            boolean dispatchAsync, MessageListener messageListener) throws JMSException {
+        if (dest == null) {
+            throw new InvalidDestinationException("Don't understand null destinations");
+        } else if (dest.getPhysicalName() == null) {
+            throw new InvalidDestinationException("The destination object was not given a physical name.");
+        } else if (dest.isTemporary()) {
+            String physicalName = dest.getPhysicalName();
+
+            if (physicalName == null) {
+                throw new IllegalArgumentException("Physical name of Destination should be valid: " + dest);
+            }
+
+            String connectionID = session.connection.getConnectionInfo().getConnectionId().getValue();
+
+            if (physicalName.indexOf(connectionID) < 0) {
+                throw new InvalidDestinationException("Cannot use a Temporary destination from another Connection");
+            }
+
+            if (session.connection.isDeleted(dest)) {
+                throw new InvalidDestinationException("Cannot use a Temporary destination that has been deleted");
+            }
+            if (prefetch < 0) {
+                throw new JMSException("Cannot have a prefetch size less than zero");
+            }
+        }
+        if (session.connection.isMessagePrioritySupported()) {
+            this.unconsumedMessages = new SimplePriorityMessageDispatchChannel();
+        }else {
+            this.unconsumedMessages = new FifoMessageDispatchChannel();
+        }
+
+        this.session = session;
+        this.redeliveryPolicy = session.connection.getRedeliveryPolicyMap().getEntryFor(dest);
+        if (this.redeliveryPolicy == null) {
+            this.redeliveryPolicy = new RedeliveryPolicy();
+        }
+        setTransformer(session.getTransformer());
+
+        this.info = new ConsumerInfo(consumerId);
+        this.info.setExclusive(this.session.connection.isExclusiveConsumer());
+        this.info.setClientId(this.session.connection.getClientID());
+        this.info.setSubscriptionName(name);
+        this.info.setPrefetchSize(prefetch);
+        this.info.setCurrentPrefetchSize(prefetch);
+        this.info.setMaximumPendingMessageLimit(maximumPendingMessageCount);
+        this.info.setNoLocal(noLocal);
+        this.info.setDispatchAsync(dispatchAsync);
+        this.info.setRetroactive(this.session.connection.isUseRetroactiveConsumer());
+        this.info.setSelector(null);
+
+        // Allows the options on the destination to configure the consumerInfo
+        if (dest.getOptions() != null) {
+            Map<String, Object> options = IntrospectionSupport.extractProperties(
+                new HashMap<String, Object>(dest.getOptions()), "consumer.");
+            IntrospectionSupport.setProperties(this.info, options);
+            if (options.size() > 0) {
+                String msg = "There are " + options.size()
+                    + " consumer options that couldn't be set on the consumer."
+                    + " Check the options are spelled correctly."
+                    + " Unknown parameters=[" + options + "]."
+                    + " This consumer cannot be started.";
+                LOG.warn(msg);
+                throw new ConfigurationException(msg);
+            }
+        }
+
+        this.info.setDestination(dest);
+        this.info.setBrowser(browser);
+        if (selector != null && selector.trim().length() != 0) {
+            // Validate the selector
+            SelectorParser.parse(selector);
+            this.info.setSelector(selector);
+            this.selector = selector;
+        } else if (info.getSelector() != null) {
+            // Validate the selector
+            SelectorParser.parse(this.info.getSelector());
+            this.selector = this.info.getSelector();
+        } else {
+            this.selector = null;
+        }
+
+        this.stats = new JMSConsumerStatsImpl(session.getSessionStats(), dest);
+        this.optimizeAcknowledge = session.connection.isOptimizeAcknowledge() && session.isAutoAcknowledge()
+                                   && !info.isBrowser();
+        if (this.optimizeAcknowledge) {
+            this.optimizeAcknowledgeTimeOut = session.connection.getOptimizeAcknowledgeTimeOut();
+            setOptimizedAckScheduledAckInterval(session.connection.getOptimizedAckScheduledAckInterval());
+        }
+
+        this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
+        this.failoverRedeliveryWaitPeriod = session.connection.getConsumerFailoverRedeliveryWaitPeriod();
+        this.nonBlockingRedelivery = session.connection.isNonBlockingRedelivery();
+        this.transactedIndividualAck = session.connection.isTransactedIndividualAck()
+                        || this.nonBlockingRedelivery
+                        || session.connection.isMessagePrioritySupported();
+        this.consumerExpiryCheckEnabled = session.connection.isConsumerExpiryCheckEnabled();
+        if (messageListener != null) {
+            setMessageListener(messageListener);
+        }
+        try {
+            // consumer创建
+            this.session.addConsumer(this);
+            this.session.syncSendPacket(info);
+        } catch (JMSException e) {
+            this.session.removeConsumer(this);
+            throw e;
+        }
+
+        if (session.connection.isStarted()) {
+            start();
+        }
+    }
+```
+
 消息的消费可以采用以下两种方法之一：
 
 *   同步消费, 通过调用MessageConsumer.receive()方法从目的地中显式提取消息。receive()方法可以一直阻塞，直到消息到达。
 *   异步消费, 客户可以为消费者注册一个消息监听器（MessageListener），以定义在消息到达时所采取的动作, 这个接口主要实现了onMessage()方法。
 
+消息的接收源码如下：
+```
+    //ActiveMQSession.java
+    protected void start() throws JMSException {
+        started.set(true);
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = iter.next();
+            c.start();
+        }
+        executor.start();
+    }
+    
+    
+    //ActiveMQSessionExecutor.java
+    synchronized void start() {
+        if (!messageQueue.isRunning()) {
+            messageQueue.start();
+            if (hasUncomsumedMessages()) {
+                wakeup();
+            }
+        }
+    }
+    
+    public void wakeup() {
+        if (!dispatchedBySessionPool) {
+            if (session.isSessionAsyncDispatch()) {
+                try {
+                    TaskRunner taskRunner = this.taskRunner;
+                    if (taskRunner == null) {
+                        synchronized (this) {
+                            if (this.taskRunner == null) {
+                                if (!isRunning()) {
+                                    // stop has been called
+                                    return;
+                                }
+                                this.taskRunner = session.connection.getSessionTaskRunner().createTaskRunner(this,
+                                        "ActiveMQ Session: " + session.getSessionId());
+                            }
+                            taskRunner = this.taskRunner;
+                        }
+                    }
+                    // 消息消费逻辑，最终也会调用iterate()方法
+                    taskRunner.wakeup();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                // 消息消费逻辑
+                while (iterate()) {
+                }
+            }
+        }
+    }
+    
+    public boolean iterate() {
+
+        // Deliver any messages queued on the consumer to their listeners.
+        for (ActiveMQMessageConsumer consumer : this.session.consumers) {
+            if (consumer.iterate()) {
+                return true;
+            }
+        }
+
+        // No messages left queued on the listeners.. so now dispatch messages
+        // queued on the session
+        MessageDispatch message = messageQueue.dequeueNoWait();
+        if (message == null) {
+            return false;
+        } else {
+            dispatch(message);
+            return !messageQueue.isEmpty();
+        }
+    }
+    
+    void dispatch(MessageDispatch message) {
+        // TODO - we should use a Map for this indexed by consumerId
+        for (ActiveMQMessageConsumer consumer : this.session.consumers) {
+            ConsumerId consumerId = message.getConsumerId();
+            if (consumerId.equals(consumer.getConsumerId())) {
+                consumer.dispatch(message);
+                break;
+            }
+        }
+    }
+    
+    
+    // ActiveMQMessageConsumer.java
+    public void dispatch(MessageDispatch md) {
+        MessageListener listener = this.messageListener.get();
+        try {
+            clearMessagesInProgress();
+            clearDeliveredList();
+            synchronized (unconsumedMessages.getMutex()) {
+                if (!unconsumedMessages.isClosed()) {
+                    if (this.info.isBrowser() || !session.connection.isDuplicate(this, md.getMessage())) {
+                        if (listener != null && unconsumedMessages.isRunning()) {
+                            if (redeliveryExceeded(md)) {
+                                posionAck(md, "listener dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
+                                return;
+                            }
+                            ActiveMQMessage message = createActiveMQMessage(md);
+                            beforeMessageIsConsumed(md);
+                            try {
+                                boolean expired = isConsumerExpiryCheckEnabled() && message.isExpired();
+                                // 消息异步处理通过onMessage钩子方法进行处理，这个是最终的处理位置
+                                if (!expired) {
+                                    listener.onMessage(message);
+                                }
+                                afterMessageIsConsumed(md, expired);
+                            } catch (RuntimeException e) {
+                                LOG.error("{} Exception while processing message: {}", getConsumerId(), md.getMessage().getMessageId(), e);
+                                md.setRollbackCause(e);
+                                if (isAutoAcknowledgeBatch() || isAutoAcknowledgeEach() || session.isIndividualAcknowledge()) {
+                                    // schedual redelivery and possible dlq processing
+                                    rollback();
+                                } else {
+                                    // Transacted or Client ack: Deliver the next message.
+                                    afterMessageIsConsumed(md, false);
+                                }
+                            }
+                        } else {
+                            if (!unconsumedMessages.isRunning()) {
+                                // delayed redelivery, ensure it can be re delivered
+                                session.connection.rollbackDuplicate(this, md.getMessage());
+                            }
+
+                            if (md.getMessage() == null) {
+                                // End of browse or pull request timeout.
+                                unconsumedMessages.enqueue(md);
+                            } else {
+                                if (!consumeExpiredMessage(md)) {
+                                    unconsumedMessages.enqueue(md);
+                                    if (availableListener != null) {
+                                        availableListener.onMessageAvailable(this);
+                                    }
+                                } else {
+                                    beforeMessageIsConsumed(md);
+                                    afterMessageIsConsumed(md, true);
+
+                                    // Pull consumer needs to check if pull timed out and send
+                                    // a new pull command if not.
+                                    if (info.getCurrentPrefetchSize() == 0) {
+                                        unconsumedMessages.enqueue(null);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // deal with duplicate delivery
+                        ConsumerId consumerWithPendingTransaction;
+                        if (redeliveryExpectedInCurrentTransaction(md, true)) {
+                            LOG.debug("{} tracking transacted redelivery {}", getConsumerId(), md.getMessage());
+                            if (transactedIndividualAck) {
+                                immediateIndividualTransactedAck(md);
+                            } else {
+                                session.sendAck(new MessageAck(md, MessageAck.DELIVERED_ACK_TYPE, 1));
+                            }
+                        } else if ((consumerWithPendingTransaction = redeliveryPendingInCompetingTransaction(md)) != null) {
+                            LOG.warn("{} delivering duplicate {}, pending transaction completion on {} will rollback", getConsumerId(), md.getMessage(), consumerWithPendingTransaction);
+                            session.getConnection().rollbackDuplicate(this, md.getMessage());
+                            dispatch(md);
+                        } else {
+                            LOG.warn("{} suppressing duplicate delivery on connection, poison acking: {}", getConsumerId(), md);
+                            posionAck(md, "Suppressing duplicate delivery on connection, consumer " + getConsumerId());
+                        }
+                    }
+                }
+            }
+            if (++dispatchedCount % 1000 == 0) {
+                dispatchedCount = 0;
+                Thread.yield();
+            }
+        } catch (Exception e) {
+            session.connection.onClientInternalException(e);
+        }
+    }    
+```
 
 #### Message消息体
 JMS消息体有以下五种类型：
@@ -510,5 +807,6 @@ Prefetch: 1000代表的是消费者设置的Prefetch Size,消费者使用的默�
 消费者一直持有未ACK的消息，只有断开该消费者，该消费者未ACK的消息才会被ActiveMQ Broker重新推送给其他消费者（这就是为什么队列堵了一些老消息，机器重启能解决的原因）。
 
 ## 参考文献:
-1. ActiveMQ in Action.pdf
+1. ActiveMQ in Action.pdf, Bruce Snyder、Dejan Bosanac and Rob Davies
 2. ActiveMQ 源码分享-Producer, 何晓娟
+3. java消息服务（第二版）, 闫怀志译
