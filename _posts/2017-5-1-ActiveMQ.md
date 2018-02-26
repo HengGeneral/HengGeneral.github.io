@@ -14,14 +14,60 @@ excerpt: "ActiveMQ"
 #### ConnectionFactory
 连接工厂是客户用来创建connection的对象，例如 ActiveMQ提供的ActiveMQConnectionFactory，通过这个对象可以创建消息客户端到消息服务提供者之间的连接。
 
+常用到的ConnectionFactory有PooledConnectionFactory、CachingConnectionFactory等。
+
 #### Connection
-JMS Connection封装了客户端（producer/consumer）到消息服务提供者之间的网络连接，它代表消息客户端到消息服务器之间的逻辑通道。
+JMS Connection封装了客户端（producer/consumer）到消息服务提供者broker之间的网络连接，它代表消息客户端到消息服务器之间的网络通道。
+connection的创建见PooledConnectionFactory/CachingConnectionFactory部分。
 
 #### Session
 JMS Session是生产和消费消息的一个单线程上下文，提供了以下功能：
 *   用于创建producers、 consumers、destination；
 *   用于消息消费过程中的管理，如消息ack前的保留、消息生产消费的序号等；
 *   提供了一个事务性的上下文，在这个上下文中，一组发送和接收被组合到了一个原子操作中。
+
+AMQ session的创建如下：
+```
+    // ActiveMQConnection.java
+    public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
+        checkClosedOrFailed();
+        ensureConnectionInfoSent();
+        if (!transacted) {
+            if (acknowledgeMode == Session.SESSION_TRANSACTED) {
+                throw new JMSException("acknowledgeMode SESSION_TRANSACTED cannot be used for an non-transacted Session");
+            } else if (acknowledgeMode < Session.SESSION_TRANSACTED || acknowledgeMode > ActiveMQSession.MAX_ACK_CONSTANT) {
+                throw new JMSException("invalid acknowledgeMode: " + acknowledgeMode + ". Valid values are Session.AUTO_ACKNOWLEDGE (1), " +
+                        "Session.CLIENT_ACKNOWLEDGE (2), Session.DUPS_OK_ACKNOWLEDGE (3), ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE (4) or for transacted sessions Session.SESSION_TRANSACTED (0)");
+            }
+        }
+        return new ActiveMQSession(this, getNextSessionId(), transacted ? Session.SESSION_TRANSACTED : acknowledgeMode, isDispatchAsync(), isAlwaysSessionAsync());
+    }
+    
+    // ActiveMQSession.java
+    protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch, boolean sessionAsyncDispatch) throws JMSException {
+            this.debug = LOG.isDebugEnabled();
+            this.connection = connection;
+            this.acknowledgementMode = acknowledgeMode;
+            this.asyncDispatch = asyncDispatch;
+            this.sessionAsyncDispatch = sessionAsyncDispatch;
+            this.info = new SessionInfo(connection.getConnectionInfo(), sessionId.getValue());
+            setTransactionContext(new TransactionContext(connection));
+            stats = new JMSSessionStatsImpl(producers, consumers);
+            this.connection.asyncSendPacket(info);
+            setTransformer(connection.getTransformer());
+            setBlobTransferPolicy(connection.getBlobTransferPolicy());
+            this.connectionExecutor = connection.getExecutor();
+            // ssionExecutor，执行器用于在有消息时异步分发消息给consumers
+            this.executor = new ActiveMQSessionExecutor(this);
+            connection.addSession(this);
+            // 启动session(其实就是启动session的consumers进行消息处理的管理)
+            if (connection.isStarted()) {
+                start();
+            }
+        }
+```
+
+一个connection可以创建多个session，connection可以被producer/consumer/session共享，而session则不可以。
 
 #### Destination
 目的地是客户用来指定它生产的消息的目标和它消费的消息的来源的对象。
@@ -61,6 +107,188 @@ JMS client使用MessageProducer类来向一个目的地址（destination）发�
     producer.send(session.createTextMessage(message));
 ```
 
+而使用session创建producer的源码如下：
+```
+    // ActiveMQMessageProducer.java
+    protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination, int sendTimeout) throws JMSException {
+        super(session);
+        this.info = new ProducerInfo(producerId);
+        this.info.setWindowSize(session.connection.getProducerWindowSize());
+        // Allows the options on the destination to configure the producerInfo
+        if (destination != null && destination.getOptions() != null) {
+            Map<String, Object> options = IntrospectionSupport.extractProperties(
+                new HashMap<String, Object>(destination.getOptions()), "producer.");
+            IntrospectionSupport.setProperties(this.info, options);
+            if (options.size() > 0) {
+                String msg = "There are " + options.size()
+                    + " producer options that couldn't be set on the producer."
+                    + " Check the options are spelled correctly."
+                    + " Unknown parameters=[" + options + "]."
+                    + " This producer cannot be started.";
+                LOG.warn(msg);
+                throw new ConfigurationException(msg);
+            }
+        }
+
+        this.info.setDestination(destination);
+
+        // Enable producer window flow control if protocol >= 3 and the window size > 0
+        if (session.connection.getProtocolVersion() >= 3 && this.info.getWindowSize() > 0) {
+            producerWindow = new MemoryUsage("Producer Window: " + producerId);
+            producerWindow.setExecutor(session.getConnectionExecutor());
+            producerWindow.setLimit(this.info.getWindowSize());
+            producerWindow.start();
+        }
+
+        this.defaultDeliveryMode = Message.DEFAULT_DELIVERY_MODE;
+        this.defaultPriority = Message.DEFAULT_PRIORITY;
+        this.defaultTimeToLive = Message.DEFAULT_TIME_TO_LIVE;
+        this.startTime = System.currentTimeMillis();
+        this.messageSequence = new AtomicLong(0);
+        this.stats = new JMSProducerStatsImpl(session.getSessionStats(), destination);
+        try {
+            this.session.addProducer(this);
+            this.session.syncSendPacket(info);
+        } catch (JMSException e) {
+            this.session.removeProducer(this);
+            throw e;
+        }
+        this.setSendTimeout(sendTimeout);
+        setTransformer(session.getTransformer());
+    }
+```
+
+消息的发送源码如下：
+```
+    // ActiveMQMessageProducer.java
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
+        checkClosed();
+        if (destination == null) {
+            if (info.getDestination() == null) {
+                throw new UnsupportedOperationException("A destination must be specified.");
+            }
+            throw new InvalidDestinationException("Don't understand null destinations");
+        }
+
+        ActiveMQDestination dest;
+        if (destination.equals(info.getDestination())) {
+            dest = (ActiveMQDestination)destination;
+        } else if (info.getDestination() == null) {
+            dest = ActiveMQDestination.transform(destination);
+        } else {
+            throw new UnsupportedOperationException("This producer can only send messages to: " + this.info.getDestination().getPhysicalName());
+        }
+        if (dest == null) {
+            throw new JMSException("No destination specified");
+        }
+
+        if (transformer != null) {
+            Message transformedMessage = transformer.producerTransform(session, this, message);
+            if (transformedMessage != null) {
+                message = transformedMessage;
+            }
+        }
+
+        if (producerWindow != null) {
+            try {
+                producerWindow.waitForSpace();
+            } catch (InterruptedException e) {
+                throw new JMSException("Send aborted due to thread interrupt.");
+            }
+        }
+
+        // 使用session发送消息
+        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow, sendTimeout, onComplete);
+
+        stats.onMessage();
+    }
+    
+    // ActiveMQSession.java
+    protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
+                        MemoryUsage producerWindow, int sendTimeout, AsyncCallback onComplete) throws JMSException {
+
+        checkClosed();
+        if (destination.isTemporary() && connection.isDeleted(destination)) {
+            throw new InvalidDestinationException("Cannot publish to a deleted Destination: " + destination);
+        }
+        synchronized (sendMutex) {
+            // tell the Broker we are about to start a new transaction
+            doStartTransaction();
+            TransactionId txid = transactionContext.getTransactionId();
+            long sequenceNumber = producer.getMessageSequence();
+
+            //Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11
+            message.setJMSDeliveryMode(deliveryMode);
+            long expiration = 0L;
+            if (!producer.getDisableMessageTimestamp()) {
+                long timeStamp = System.currentTimeMillis();
+                message.setJMSTimestamp(timeStamp);
+                if (timeToLive > 0) {
+                    expiration = timeToLive + timeStamp;
+                }
+            }
+            message.setJMSExpiration(expiration);
+            message.setJMSPriority(priority);
+            message.setJMSRedelivered(false);
+
+            // transform to our own message format here
+            ActiveMQMessage msg = ActiveMQMessageTransformation.transformMessage(message, connection);
+            msg.setDestination(destination);
+            msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
+
+            // Set the message id.
+            if (msg != message) {
+                message.setJMSMessageID(msg.getMessageId().toString());
+                // Make sure the JMS destination is set on the foreign messages too.
+                message.setJMSDestination(destination);
+            }
+            //clear the brokerPath in case we are re-sending this message
+            msg.setBrokerPath(null);
+
+            msg.setTransactionId(txid);
+            if (connection.isCopyMessageOnSend()) {
+                msg = (ActiveMQMessage)msg.copy();
+            }
+            msg.setConnection(connection);
+            msg.onSend();
+            msg.setProducerId(msg.getMessageId().getProducerId());
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(getSessionId() + " sending message: " + msg);
+            }
+            if (onComplete==null && sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
+                this.connection.asyncSendPacket(msg);
+                if (producerWindow != null) {
+                    // Since we defer lots of the marshaling till we hit the
+                    // wire, this might not
+                    // provide and accurate size. We may change over to doing
+                    // more aggressive marshaling,
+                    // to get more accurate sizes.. this is more important once
+                    // users start using producer window
+                    // flow control.
+                    int size = msg.getSize();
+                    producerWindow.increaseUsage(size);
+                }
+            } else {
+                if (sendTimeout > 0 && onComplete==null) {
+                    this.connection.syncSendPacket(msg,sendTimeout);
+                }else {
+                    // 开始使用connection进行消息的发送
+                    this.connection.syncSendPacket(msg, onComplete);
+                }
+            }
+        }
+    }
+    
+    // 消息交由ActiveMQConnection发送，最终使用transport进行消息发送
+    private void doAsyncSendPacket(Command command) throws JMSException {
+        try {
+            this.transport.oneway(command);
+        } catch (IOException e) {
+            throw JMSExceptionSupport.create(e);
+        }
+    }
+```
+
 而对于每条消息，也提供了覆盖这个地址的方法，这个在spring中也运用较多，使用方式如下：
 ```
     public void send(final Destination destination, final MessageCreator messageCreator) throws JmsException；
@@ -76,6 +304,10 @@ JMS client使用MessageProducer类来向一个目的地址（destination）发�
                     }
                 });
 ```
+
+消息发送的过程是ConnectionFactory->Connection->Session->MessageProducer->send，如下图所示（图片来源于何晓娟同学）：
+
+![amqPubSub](/images/activemq/amq_sendProcess.png)
 
 #### Consumer
 消息消费者也是由session创建的一个对象，它用于接收发送到destination的消息。客户端使用session.createConsumer(Destination)方法创建MessageConsumer, 创建方式如下：
@@ -170,7 +402,7 @@ JMS消息体有以下五种类型：
     }
 ```
 
-从上面的代码可以看出，创建的connection数量的限制会受限于DEFAULT_MAX_IDLE_PER_KEY(默认是8)。
+从上面的代码可以看出，创建的connection数量的限制会受限于PooledConnectionFactory.setMaxConnections()方法(默认是8)。
 
 需要注意的是，PooledConnectionFactory并不会缓存consumers。原因是，consumer会批量的获取消息，
 接收消息的多少可以根据prefetch的大小设置，因此在大量消息发送到消费者时，消费者使用类似统一获取、统一消费的方式处理，“池”没有存在的价值。
@@ -279,3 +511,4 @@ Prefetch: 1000代表的是消费者设置的Prefetch Size,消费者使用的默�
 
 ## 参考文献:
 1. ActiveMQ in Action.pdf
+2. ActiveMQ 源码分享-Producer, 何晓娟
